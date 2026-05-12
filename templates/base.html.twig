@@ -107,6 +107,14 @@
             box-shadow: 0 2px 8px rgba(23, 33, 43, .08);
         }
 
+        .module-enabled {
+            border-left: 4px solid var(--ci-teal);
+        }
+
+        .module-locked {
+            border-left: 4px solid #94a3b8;
+        }
+
         .ci-actionbar {
             position: sticky;
             top: 0;
@@ -129,6 +137,7 @@
         <a class="navbar-brand fw-semibold" href="{{ path('dashboard') }}">ClinicInsight</a>
         <div class="d-flex gap-2">
             {% if app.user %}
+                <a class="btn btn-sm btn-outline-primary" href="{{ path('modules_index') }}">Modulos</a>
                 <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_logout') }}">Salir</a>
             {% endif %}
         </div>

@@ -54,6 +54,7 @@ OPENAI_API_KEY=""
 OPENAI_MODEL="gpt-5.2"
 UPLOADS_DIR="var/uploads"
 DATA_ENCRYPTION_KEY="base64_de_32_bytes"
+APP_PLAN="professional"
 ```
 
 Generar clave local:

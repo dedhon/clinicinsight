@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modulos - ClinicInsight{% endblock %}
+
+{% block body %}
+<div class="ci-actionbar py-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h3 mb-1">Modulos</h1>
+            <div class="text-muted">Activa capacidades por version y plan. Plan actual: <strong>{{ currentPlan|capitalize }}</strong></div>
+        </div>
+        <a class="btn btn-outline-secondary" href="{{ path('dashboard') }}">Dashboard</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for category, modules in groups %}
+        <div class="col-12">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <h2 class="h5 mb-0">{{ category }}</h2>
+                <span class="badge text-bg-light border">{{ modules|length }}</span>
+            </div>
+            <div class="row g-3">
+                {% for module in modules %}
+                    <div class="col-md-6 col-xl-4">
+                        <div class="ci-panel p-3 h-100 module-card {{ module.enabled ? 'module-enabled' : 'module-locked' }}">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <h3 class="h6 mb-1">{{ module.name }}</h3>
+                                    <div class="small text-muted">v{{ module.version }} · {{ module.price_label }}</div>
+                                </div>
+                                {% if module.status == 'active' and module.enabled %}
+                                    <span class="badge text-bg-success">Activo</span>
+                                {% elseif module.status == 'beta' %}
+                                    <span class="badge text-bg-warning">Beta</span>
+                                {% elseif module.status == 'planned' %}
+                                    <span class="badge text-bg-secondary">Proximamente</span>
+                                {% else %}
+                                    <span class="badge text-bg-light border">Bloqueado</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted small">{{ module.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="small text-muted">Min: {{ module.minimum_plan|capitalize }}</span>
+                                {% if module.enabled %}
+                                    <button class="btn btn-sm btn-primary" type="button" data-module-action="open">Listo</button>
+                                {% elseif module.status == 'planned' %}
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>En roadmap</button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-primary" type="button" data-module-action="upgrade">Mejorar plan</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+document.querySelectorAll('.module-card').forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(14px)';
+    setTimeout(() => {
+        card.style.transition = 'opacity .28s ease, transform .28s ease, box-shadow .18s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+    }, index * 45);
+});
+
+document.querySelectorAll('[data-module-action]').forEach(button => {
+    button.addEventListener('click', () => {
+        const previous = button.textContent;
+        button.textContent = button.dataset.moduleAction === 'upgrade' ? 'Pago pendiente' : 'Modulo activo';
+        setTimeout(() => button.textContent = previous, 1400);
+    });
+});
+</script>
+{% endblock %}
+
