@@ -9,6 +9,7 @@ use App\Service\InsightService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -18,6 +19,7 @@ class ReportController extends AbstractController
     #[Route('/upload/{id}/report', name: 'report_show', methods: ['GET'])]
     public function show(
         UploadedDatasetFile $uploadedFile,
+        Request $request,
         AnalyticsService $analyticsService,
         InsightService $insightService,
         EntityManagerInterface $em,
@@ -31,7 +33,7 @@ class ReportController extends AbstractController
             ['createdAt' => 'DESC']
         );
 
-        if ($uploadedFile->getStatus() === UploadedDatasetFile::STATUS_ANALYZED && $existingReport instanceof InsightReport) {
+        if (!$request->query->getBoolean('refresh') && $uploadedFile->getStatus() === UploadedDatasetFile::STATUS_ANALYZED && $existingReport instanceof InsightReport) {
             return $this->render('report/show.html.twig', [
                 'uploadedFile' => $uploadedFile,
                 'report' => $existingReport,

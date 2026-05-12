@@ -26,6 +26,21 @@ class ExportController extends AbstractController
         }
 
         foreach ($report->getCharts() as $chartName => $series) {
+            if ($chartName === 'generic') {
+                foreach ($series['charts'] ?? [] as $genericName => $definition) {
+                    foreach (($definition['data'] ?? []) as $dimension => $value) {
+                        if (is_array($value)) {
+                            foreach ($value as $nestedMetric => $nestedValue) {
+                                $lines[] = [$uploadedFile->getOriginalName(), 'generic', $genericName . '.' . $nestedMetric, $dimension, $nestedValue];
+                            }
+                            continue;
+                        }
+                        $lines[] = [$uploadedFile->getOriginalName(), 'generic', $genericName, $dimension, $value];
+                    }
+                }
+                continue;
+            }
+
             foreach ($series as $dimension => $value) {
                 $lines[] = [$uploadedFile->getOriginalName(), 'chart', $chartName, $dimension, $value];
             }
@@ -77,4 +92,3 @@ class ExportController extends AbstractController
         return implode(',', array_map(fn ($value) => '"' . str_replace('"', '""', (string) $value) . '"', $row));
     }
 }
-
