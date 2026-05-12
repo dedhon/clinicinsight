@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Informe - ClinicInsight{% endblock %}
+
+{% block body %}
+{% set k = report.kpis %}
+{% set c = report.charts %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="h3 mb-1">Dashboard</h1>
+        <p class="text-muted">{{ uploadedFile.originalName }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{{ path('project_show', {id: uploadedFile.project.id}) }}">Proyecto</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">Visitas totales</div><div class="h3">{{ k.total_visits }}</div></div></div></div>
+    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">Cancelaciones</div><div class="h3">{{ k.cancelled_visits }}</div></div></div></div>
+    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">No presentados</div><div class="h3">{{ k.no_show_visits }}</div></div></div></div>
+    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">Facturacion</div><div class="h3">{{ k.total_revenue|number_format(2, ',', '.') }} EUR</div></div></div></div>
+    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">Ticket medio</div><div class="h3">{{ k.average_ticket|number_format(2, ',', '.') }} EUR</div></div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="h5">Visitas por mes</h2><div id="visitsByMonth"></div></div></div></div>
+    <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="h5">Facturacion por mes</h2><div id="revenueByMonth"></div></div></div></div>
+    <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="h5">Visitas por profesional</h2><div id="visitsByProfessional"></div></div></div></div>
+    <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="h5">Cancelaciones por dia</h2><div id="cancellationsByWeekday"></div></div></div></div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h2 class="h5">Insight IA</h2>
+        <p class="mb-0">{{ report.summary }}</p>
+    </div>
+</div>
+
+<script>
+const charts = {{ c|json_encode|raw }};
+function renderBar(id, title, data) {
+    new ApexCharts(document.querySelector(id), {
+        chart: { type: 'bar', height: 300, toolbar: { show: false } },
+        series: [{ name: title, data: Object.values(data) }],
+        xaxis: { categories: Object.keys(data) },
+        dataLabels: { enabled: false }
+    }).render();
+}
+function renderLine(id, title, data) {
+    new ApexCharts(document.querySelector(id), {
+        chart: { type: 'line', height: 300, toolbar: { show: false } },
+        series: [{ name: title, data: Object.values(data) }],
+        xaxis: { categories: Object.keys(data) },
+        stroke: { curve: 'smooth' }
+    }).render();
+}
+renderLine('#visitsByMonth', 'Visitas', charts.visits_by_month || {});
+renderLine('#revenueByMonth', 'EUR', charts.revenue_by_month || {});
+renderBar('#visitsByProfessional', 'Visitas', charts.visits_by_professional || {});
+renderBar('#cancellationsByWeekday', 'Cancelaciones', charts.cancellations_by_weekday || {});
+</script>
+{% endblock %}
+
