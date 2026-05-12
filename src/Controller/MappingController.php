@@ -27,6 +27,7 @@ class MappingController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        //Pr
         if ($request->isMethod('POST')) {
             $mapping = [];
             foreach ($uploadedFile->getColumns() as $column) {
