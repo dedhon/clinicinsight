@@ -19,10 +19,10 @@ class DatasetRow
     #[ORM\Column]
     private int $rowNumber = 0;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'encrypted_json')]
     private array $rawData = [];
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(type: 'encrypted_json', nullable: true)]
     private ?array $normalizedData = null;
 
     #[ORM\Column]
@@ -44,4 +44,3 @@ class DatasetRow
     public function setNormalizedData(?array $normalizedData): self { $this->normalizedData = $normalizedData; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
 }
-

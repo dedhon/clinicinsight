@@ -91,7 +91,7 @@ class ColumnDetectionService
                 ->setConfidence(isset($ai['confidence']) ? (float) $ai['confidence'] : $localColumns[$header]['confidence'])
                 ->setIgnored($ignored)
                 ->setReason($localColumns[$header]['reason'] ?? ($ai['reason'] ?? ($mappedField ? 'Mapeada por reglas locales.' : null)))
-                ->setExampleValues(array_slice($examples[$header] ?? [], 0, 5));
+                ->setExampleValues($ignored ? [] : array_slice($examples[$header] ?? [], 0, 5));
 
             $this->em->persist($datasetColumn);
         }
