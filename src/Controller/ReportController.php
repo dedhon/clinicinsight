@@ -26,6 +26,18 @@ class ReportController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        $existingReport = $em->getRepository(InsightReport::class)->findOneBy(
+            ['uploadedFile' => $uploadedFile],
+            ['createdAt' => 'DESC']
+        );
+
+        if ($uploadedFile->getStatus() === UploadedDatasetFile::STATUS_ANALYZED && $existingReport instanceof InsightReport) {
+            return $this->render('report/show.html.twig', [
+                'uploadedFile' => $uploadedFile,
+                'report' => $existingReport,
+            ]);
+        }
+
         $analysis = $analyticsService->analyze($uploadedFile);
         $summary = $insightService->summarize($analysis['kpis'], $analysis['charts']);
 

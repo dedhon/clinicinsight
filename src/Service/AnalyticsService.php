@@ -14,6 +14,8 @@ class AnalyticsService
         $cancelled = $this->countStatus($rows, 'cancelada');
         $noShow = $this->countStatus($rows, 'no_presentado');
         $revenue = array_sum(array_map(fn ($r) => (float) ($r['amount'] ?? 0), $rows));
+        $completedRate = $totalVisits > 0 ? round(($completed / $totalVisits) * 100, 1) : 0;
+        $cancellationRate = $totalVisits > 0 ? round((($cancelled + $noShow) / $totalVisits) * 100, 1) : 0;
 
         $charts = [
             'visits_by_month' => $this->groupCount($rows, fn ($r) => substr((string) ($r['visit_date'] ?? 'Sin fecha'), 0, 7)),
@@ -21,6 +23,9 @@ class AnalyticsService
             'visits_by_professional' => $this->groupCount($rows, fn ($r) => $r['professional_name'] ?? 'Sin profesional'),
             'revenue_by_professional' => $this->groupSum($rows, fn ($r) => $r['professional_name'] ?? 'Sin profesional', 'amount'),
             'cancellations_by_weekday' => $this->cancellationsByWeekday($rows),
+            'visits_by_status' => $this->groupCount($rows, fn ($r) => $r['status'] ?? 'sin_estado'),
+            'visits_by_specialty' => $this->groupCount($rows, fn ($r) => $r['specialty'] ?? 'Sin especialidad'),
+            'visits_by_insurance' => $this->groupCount($rows, fn ($r) => $r['insurance'] ?? 'Sin aseguradora'),
         ];
 
         return [
@@ -31,6 +36,8 @@ class AnalyticsService
                 'no_show_visits' => $noShow,
                 'total_revenue' => round($revenue, 2),
                 'average_ticket' => $completed > 0 ? round($revenue / $completed, 2) : 0,
+                'completed_rate' => $completedRate,
+                'cancellation_rate' => $cancellationRate,
             ],
             'charts' => $charts,
         ];
@@ -75,4 +82,3 @@ class AnalyticsService
         return $labels;
     }
 }
-

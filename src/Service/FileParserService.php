@@ -30,6 +30,7 @@ class FileParserService
 
     private function parseCsv(string $path): array
     {
+        $delimiter = $this->detectDelimiter($path);
         $handle = fopen($path, 'rb');
         if (!$handle) {
             throw new \RuntimeException('No se pudo leer el CSV.');
@@ -37,9 +38,7 @@ class FileParserService
 
         $matrix = [];
         while (($row = fgetcsv($handle, 0, ';')) !== false) {
-            if (count($row) === 1) {
-                $row = str_getcsv($row[0], ',');
-            }
+            $row = $delimiter === ';' ? $row : str_getcsv(implode(';', $row), $delimiter);
             $matrix[] = $row;
         }
         fclose($handle);
@@ -50,8 +49,9 @@ class FileParserService
     private function parseJson(string $path): array
     {
         $payload = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
-        $rows = array_is_list($payload) ? $payload : ($payload['rows'] ?? []);
-        $headers = array_keys($rows[0] ?? []);
+        $rows = array_is_list($payload) ? $payload : ($payload['rows'] ?? $payload['data'] ?? $payload['items'] ?? []);
+        $rows = array_map(fn (array $row) => $this->flattenRow($row), $rows);
+        $headers = $this->uniqueHeaders(array_merge(...array_map('array_keys', $rows ?: [[]])));
 
         return $this->buildResult($headers, $rows);
     }
@@ -59,7 +59,7 @@ class FileParserService
     private function matrixToDataset(array $matrix): array
     {
         $matrix = array_values(array_filter($matrix, fn (array $row) => count(array_filter($row, fn ($v) => $v !== null && $v !== '')) > 0));
-        $headers = array_map(fn ($v) => trim((string) $v), array_values($matrix[0] ?? []));
+        $headers = $this->uniqueHeaders(array_map(fn ($v) => trim($this->removeBom((string) $v)), array_values($matrix[0] ?? [])));
         $rows = [];
 
         foreach (array_slice($matrix, 1) as $row) {
@@ -79,6 +79,59 @@ class FileParserService
         return $this->buildResult($headers, $rows);
     }
 
+    private function detectDelimiter(string $path): string
+    {
+        $sample = (string) file_get_contents($path, false, null, 0, 4096);
+        $candidates = [';' => substr_count($sample, ';'), ',' => substr_count($sample, ','), "\t" => substr_count($sample, "\t")];
+        arsort($candidates);
+
+        return array_key_first($candidates) ?: ';';
+    }
+
+    private function uniqueHeaders(array $headers): array
+    {
+        $seen = [];
+        $result = [];
+
+        foreach ($headers as $header) {
+            $header = trim((string) $header);
+            if ($header === '') {
+                continue;
+            }
+
+            $base = $header;
+            $suffix = 2;
+            while (isset($seen[mb_strtolower($header)])) {
+                $header = $base . ' ' . $suffix++;
+            }
+
+            $seen[mb_strtolower($header)] = true;
+            $result[] = $header;
+        }
+
+        return $result;
+    }
+
+    private function flattenRow(array $row, string $prefix = ''): array
+    {
+        $flat = [];
+        foreach ($row as $key => $value) {
+            $name = $prefix === '' ? (string) $key : $prefix . '.' . $key;
+            if (is_array($value) && !array_is_list($value)) {
+                $flat += $this->flattenRow($value, $name);
+                continue;
+            }
+            $flat[$name] = is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value;
+        }
+
+        return $flat;
+    }
+
+    private function removeBom(string $value): string
+    {
+        return preg_replace('/^\xEF\xBB\xBF/', '', $value) ?? $value;
+    }
+
     private function buildResult(array $headers, array $rows): array
     {
         $examples = [];
@@ -96,4 +149,3 @@ class FileParserService
         ];
     }
 }
-
