@@ -3,29 +3,42 @@
 {% block title %}Login - ClinicInsight{% endblock %}
 
 {% block body %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-body">
-                <h1 class="h4 mb-3">Acceso</h1>
-                {% if error %}
-                    <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-                {% endif %}
-                <form method="post">
-                    <div class="mb-3">
-                        <label class="form-label" for="email">Email</label>
-                        <input type="email" value="{{ last_username }}" name="_username" id="email" class="form-control" autocomplete="email" required autofocus>
+<div class="row min-vh-75 align-items-center justify-content-center">
+    <div class="col-lg-10">
+        <div class="ci-hero p-4 p-lg-5">
+            <div class="row g-4 align-items-center position-relative">
+                <div class="col-lg-6">
+                    <div class="ci-eyebrow mb-2">ClinicInsight</div>
+                    <h1 class="ci-page-title mb-3">Dashboards claros para datos complejos.</h1>
+                    <p class="lead ci-muted mb-4">Accede a tus proyectos, sube datasets, valida privacidad y genera informes ejecutivos en minutos.</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="ci-status-pill">Cifrado</span>
+                        <span class="ci-status-pill">BI automatico</span>
+                        <span class="ci-status-pill">Exportable</span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="password">Password</label>
-                        <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
+                </div>
+                <div class="col-lg-5 offset-lg-1">
+                    <div class="ci-panel p-4">
+                        <h2 class="h4 mb-3">Acceso</h2>
+                        {% if error %}
+                            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                        {% endif %}
+                        <form method="post">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="email">Email</label>
+                                <input type="email" value="{{ last_username }}" name="_username" id="email" class="form-control form-control-lg" autocomplete="email" required autofocus>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="password">Password</label>
+                                <input type="password" name="_password" id="password" class="form-control form-control-lg" autocomplete="current-password" required>
+                            </div>
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                            <button class="btn btn-primary btn-lg w-100" type="submit">Entrar al panel</button>
+                        </form>
                     </div>
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                    <button class="btn btn-primary w-100" type="submit">Entrar</button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-

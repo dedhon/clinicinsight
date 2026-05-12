@@ -3,12 +3,18 @@
 {% block title %}Mapeo - ClinicInsight{% endblock %}
 
 {% block body %}
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h1 class="h3 mb-1">Confirmar mapeo</h1>
-        <p class="text-muted mb-0">Archivo: {{ uploadedFile.originalName }}. Revisa columnas sensibles antes de normalizar.</p>
+<div class="ci-actionbar py-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <div class="ci-eyebrow mb-1">Validacion y mapeo</div>
+            <h1 class="h3 mb-1">Confirma como interpretar este archivo</h1>
+            <div class="text-muted">{{ uploadedFile.originalName }} · {{ uploadedFile.rowCount }} filas</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="{{ path('project_show', {id: uploadedFile.project.id}) }}">Proyecto</a>
+            <button class="btn btn-primary" form="mappingForm">Normalizar</button>
+        </div>
     </div>
-    <span class="badge text-bg-light border">{{ uploadedFile.rowCount }} filas</span>
 </div>
 
 <div class="row g-3 mb-4">
@@ -78,7 +84,7 @@
     </div>
 </div>
 
-<form method="post">
+<form method="post" id="mappingForm">
     <div class="table-responsive ci-panel">
         <table class="table align-middle mb-0">
             <thead>
@@ -122,6 +128,8 @@
             </tbody>
         </table>
     </div>
-    <button class="btn btn-primary mt-3">Normalizar y generar dashboard</button>
+    <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-primary btn-lg">Normalizar y generar dashboard</button>
+    </div>
 </form>
 {% endblock %}

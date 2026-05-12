@@ -3,30 +3,87 @@
 {% block title %}Dashboard - ClinicInsight{% endblock %}
 
 {% block body %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h3 mb-1">Proyectos</h1>
-        <p class="text-muted mb-0">Analisis agregados de actividad clinica.</p>
+<section class="ci-hero p-4 p-lg-5 mb-4 ci-fade-up">
+    <div class="row align-items-center g-4 position-relative">
+        <div class="col-lg-7">
+            <div class="ci-eyebrow mb-2">Workspace BI</div>
+            <h1 class="ci-page-title mb-3">Convierte archivos en decisiones.</h1>
+            <p class="lead ci-muted mb-4">Sube Excel, CSV o JSON, valida columnas, protege datos sensibles y genera dashboards ejecutivos listos para compartir.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary btn-lg" href="{{ path('project_new') }}">Nuevo proyecto</a>
+                <a class="btn ci-soft-btn btn-lg" href="{{ path('modules_index') }}">Ver modulos</a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="ci-panel ci-kpi p-3">
+                        <div class="ci-kpi-label">Proyectos</div>
+                        <div class="ci-kpi-value">{{ projects|length }}</div>
+                        <div class="ci-kpi-sub">en tu cuenta</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    {% set totalFiles = 0 %}
+                    {% for project in projects %}
+                        {% set totalFiles = totalFiles + project.uploadedFiles|length %}
+                    {% endfor %}
+                    <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-blue)">
+                        <div class="ci-kpi-label">Datasets</div>
+                        <div class="ci-kpi-value">{{ totalFiles }}</div>
+                        <div class="ci-kpi-sub">archivos cargados</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="ci-panel p-3">
+                        <div class="ci-kpi-label mb-2">Flujo recomendado</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="ci-status-pill">Subir</span>
+                            <span class="ci-status-pill">Validar</span>
+                            <span class="ci-status-pill">Mapear</span>
+                            <span class="ci-status-pill">Analizar</span>
+                            <span class="ci-status-pill">Exportar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <a class="btn btn-primary" href="{{ path('project_new') }}">Nuevo proyecto</a>
+</section>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <div>
+        <h2 class="h4 mb-1">Tus proyectos</h2>
+        <div class="text-muted">Accede rapido a datasets, informes y exploradores.</div>
+    </div>
+    <a class="btn btn-outline-primary" href="{{ path('project_new') }}">Crear proyecto</a>
 </div>
 
 <div class="row g-3">
     {% for project in projects %}
         <div class="col-md-6 col-xl-4">
-            <a class="card text-decoration-none text-dark h-100" href="{{ path('project_show', {id: project.id}) }}">
-                <div class="card-body">
-                    <h2 class="h5">{{ project.name }}</h2>
-                    <p class="text-muted">{{ project.description ?: 'Sin descripcion' }}</p>
-                    <span class="badge text-bg-light">{{ project.uploadedFiles|length }} archivos</span>
+            <a class="ci-card-link ci-panel p-3 h-100 ci-fade-up" style="animation-delay: {{ loop.index0 * 45 }}ms" href="{{ path('project_show', {id: project.id}) }}">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <span class="ci-icon-box">{{ project.name|slice(0, 1)|upper }}</span>
+                    <span class="badge text-bg-light border">{{ project.uploadedFiles|length }} archivos</span>
+                </div>
+                <h3 class="h5 mb-2">{{ project.name }}</h3>
+                <p class="text-muted small mb-3">{{ project.description ?: 'Proyecto BI preparado para nuevos datasets.' }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">Actualizado</span>
+                    <span class="btn btn-sm btn-primary">Abrir</span>
                 </div>
             </a>
         </div>
     {% else %}
         <div class="col-12">
-            <div class="alert alert-info">Crea tu primer proyecto para subir un Excel o CSV.</div>
+            <div class="ci-panel p-4 text-center">
+                <div class="ci-icon-box mx-auto mb-3">+</div>
+                <h2 class="h5">Todavia no hay proyectos</h2>
+                <p class="text-muted">Crea uno y sube tu primer Excel o CSV para empezar a generar graficos.</p>
+                <a class="btn btn-primary" href="{{ path('project_new') }}">Crear primer proyecto</a>
+            </div>
         </div>
     {% endfor %}
 </div>
 {% endblock %}
-

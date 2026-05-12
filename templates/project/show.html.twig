@@ -3,41 +3,93 @@
 {% block title %}{{ project.name }} - ClinicInsight{% endblock %}
 
 {% block body %}
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h1 class="h3 mb-1">{{ project.name }}</h1>
-        <p class="text-muted">{{ project.description }}</p>
+<div class="ci-actionbar py-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <div class="ci-eyebrow mb-1">Proyecto</div>
+            <h1 class="h3 mb-1">{{ project.name }}</h1>
+            <div class="text-muted">{{ project.description ?: 'Sin descripcion. Puedes empezar subiendo un dataset.' }}</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="{{ path('dashboard') }}">Proyectos</a>
+            <a class="btn btn-outline-primary" href="{{ path('modules_index') }}">Modulos</a>
+        </div>
     </div>
-    <a class="btn btn-outline-secondary" href="{{ path('dashboard') }}">Volver</a>
 </div>
 
 <div class="row g-4">
-    <div class="col-lg-5">
-        <div class="card">
-            <div class="card-body">
-                <h2 class="h5">Subir dataset</h2>
-                <form method="post" enctype="multipart/form-data" action="{{ path('project_upload', {id: project.id}) }}">
-                    <div class="mb-3">
-                        <input class="form-control" type="file" name="dataset" accept=".xlsx,.xls,.csv,.json" required>
-                    </div>
-                    <button class="btn btn-primary">Subir y analizar columnas</button>
-                </form>
-                <form method="post" action="{{ path('project_demo', {id: project.id}) }}" class="mt-3">
-                    <button class="btn btn-outline-primary">Crear dataset demo</button>
-                </form>
+    <div class="col-xl-4">
+        <div class="ci-panel p-4 mb-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="ci-icon-box">UP</span>
+                <div>
+                    <h2 class="h5 mb-1">Subir dataset</h2>
+                    <div class="small text-muted">Excel, CSV o JSON</div>
+                </div>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{{ path('project_upload', {id: project.id}) }}">
+                <label class="ci-quick-action w-100 mb-3" for="datasetInput">
+                    <div class="fw-semibold">Selecciona o arrastra tu archivo</div>
+                    <div class="small text-muted">Se validaran columnas, tipos y compatibilidad antes de analizar.</div>
+                    <input class="form-control mt-3" id="datasetInput" type="file" name="dataset" accept=".xlsx,.xls,.csv,.json" required>
+                </label>
+                <button class="btn btn-primary w-100 btn-lg">Subir y validar</button>
+            </form>
+            <form method="post" action="{{ path('project_demo', {id: project.id}) }}" class="mt-3">
+                <button class="btn ci-soft-btn w-100" type="submit">Crear dataset demo</button>
+            </form>
+        </div>
+
+        <div class="ci-panel p-3">
+            <div class="ci-kpi-label mb-3">Accesos rapidos</div>
+            <div class="d-grid gap-2">
+                <a class="btn btn-outline-primary text-start" href="{{ path('modules_index') }}">Configurar modulos</a>
+                <a class="btn btn-outline-secondary text-start" href="{{ path('dashboard') }}">Volver al workspace</a>
             </div>
         </div>
     </div>
-    <div class="col-lg-7">
-        <h2 class="h5">Archivos</h2>
-        <div class="list-group">
+
+    <div class="col-xl-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h4 mb-1">Archivos del proyecto</h2>
+                <div class="text-muted">Abre el siguiente paso segun el estado de cada dataset.</div>
+            </div>
+            <span class="badge text-bg-light border">{{ project.uploadedFiles|length }} datasets</span>
+        </div>
+
+        <div class="row g-3">
             {% for file in project.uploadedFiles %}
-                <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ path(file.status == 'parsed' ? 'upload_mapping' : 'report_show', {id: file.id}) }}">
-                    <span>{{ file.originalName }}</span>
-                    <span class="badge text-bg-secondary">{{ file.status }}</span>
-                </a>
+                {% set targetRoute = file.status == 'parsed' ? 'upload_mapping' : 'report_show' %}
+                {% set targetLabel = file.status == 'parsed' ? 'Mapear' : 'Dashboard' %}
+                <div class="col-12">
+                    <div class="ci-panel p-3 ci-fade-up" style="animation-delay: {{ loop.index0 * 45 }}ms">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="ci-icon-box">{{ file.originalName|split('.')|last|upper|slice(0, 3) }}</span>
+                                <div>
+                                    <h3 class="h6 mb-1">{{ file.originalName }}</h3>
+                                    <div class="small text-muted">{{ file.rowCount }} filas · {{ file.mimeType }}</div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="ci-status-pill">{{ file.status }}</span>
+                                <a class="btn btn-sm btn-primary" href="{{ path(targetRoute, {id: file.id}) }}">{{ targetLabel }}</a>
+                                {% if file.status != 'parsed' and file.status != 'error' %}
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('data_explorer', {id: file.id}) }}">Datos</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% else %}
-                <div class="list-group-item text-muted">Sin archivos todavia.</div>
+                <div class="col-12">
+                    <div class="ci-panel p-5 text-center">
+                        <div class="ci-icon-box mx-auto mb-3">XL</div>
+                        <h2 class="h5">Aun no hay archivos</h2>
+                        <p class="text-muted mb-0">Sube un Excel, CSV o JSON para activar preview, mapeo y graficos.</p>
+                    </div>
+                </div>
             {% endfor %}
         </div>
     </div>

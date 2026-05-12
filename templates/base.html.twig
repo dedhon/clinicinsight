@@ -16,6 +16,8 @@
             --ci-coral: #c2410c;
             --ci-amber: #b45309;
             --ci-violet: #6d5bd0;
+            --ci-blue: #2563eb;
+            --ci-shadow: 0 18px 42px rgba(23, 33, 43, .10);
         }
 
         body {
@@ -27,6 +29,22 @@
 
         .navbar {
             backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, .92) !important;
+        }
+
+        .navbar-brand {
+            letter-spacing: 0;
+        }
+
+        .ci-brand-mark {
+            display: inline-grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--ci-teal);
+            color: #fff;
+            font-weight: 800;
         }
 
         .ci-shell {
@@ -38,6 +56,46 @@
             border: 1px solid var(--ci-line);
             border-radius: 8px;
             box-shadow: 0 10px 28px rgba(23, 33, 43, .06);
+        }
+
+        .ci-hero {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--ci-line);
+            border-radius: 8px;
+            background:
+                radial-gradient(circle at 18% 20%, rgba(15, 118, 110, .16), transparent 28%),
+                radial-gradient(circle at 88% 12%, rgba(37, 99, 235, .16), transparent 30%),
+                linear-gradient(135deg, #ffffff 0%, #eef7f6 52%, #f7fbff 100%);
+            box-shadow: var(--ci-shadow);
+        }
+
+        .ci-hero::after {
+            content: "";
+            position: absolute;
+            inset: auto -8% -38% 45%;
+            height: 220px;
+            background: repeating-linear-gradient(90deg, rgba(15, 118, 110, .10) 0 1px, transparent 1px 18px);
+            transform: rotate(-8deg);
+            pointer-events: none;
+        }
+
+        .ci-eyebrow {
+            color: var(--ci-teal);
+            font-size: .78rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .ci-page-title {
+            font-size: clamp(1.75rem, 3vw, 3rem);
+            font-weight: 850;
+            letter-spacing: 0;
+        }
+
+        .ci-muted {
+            color: var(--ci-muted);
         }
 
         .ci-kpi {
@@ -78,6 +136,85 @@
             box-shadow: 0 16px 36px rgba(23, 33, 43, .10);
         }
 
+        .ci-card-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .ci-card-link:hover {
+            color: inherit;
+        }
+
+        .ci-soft-btn {
+            background: #eef7f6;
+            border: 1px solid #cce4df;
+            color: #0f5f59;
+            font-weight: 700;
+        }
+
+        .ci-soft-btn:hover {
+            background: #dff1ee;
+            color: #0b4d48;
+        }
+
+        .btn {
+            transition: transform .14s ease, box-shadow .14s ease, background-color .14s ease, border-color .14s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0) scale(.985);
+        }
+
+        .ci-quick-action {
+            border: 1px solid var(--ci-line);
+            border-radius: 8px;
+            background: #fff;
+            padding: 14px;
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .ci-quick-action:hover {
+            transform: translateY(-2px);
+            border-color: #b8c7d5;
+            box-shadow: 0 12px 26px rgba(23, 33, 43, .08);
+        }
+
+        .ci-icon-box {
+            display: inline-grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #eef4f7;
+            color: var(--ci-teal);
+            font-weight: 850;
+        }
+
+        .ci-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 5px 9px;
+            background: #eef4f7;
+            color: var(--ci-muted);
+            font-size: .78rem;
+            font-weight: 750;
+        }
+
+        .ci-status-pill::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--ci-teal);
+        }
+
         .ci-kpi-value {
             transition: color .2s ease;
         }
@@ -115,6 +252,15 @@
             border-left: 4px solid #94a3b8;
         }
 
+        .ci-fade-up {
+            animation: ciFadeUp .34s ease both;
+        }
+
+        @keyframes ciFadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .ci-actionbar {
             position: sticky;
             top: 0;
@@ -134,9 +280,13 @@
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg bg-white border-bottom">
     <div class="container ci-shell">
-        <a class="navbar-brand fw-semibold" href="{{ path('dashboard') }}">ClinicInsight</a>
+        <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="{{ path('dashboard') }}">
+            <span class="ci-brand-mark">CI</span>
+            <span>ClinicInsight</span>
+        </a>
         <div class="d-flex gap-2">
             {% if app.user %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ path('dashboard') }}">Proyectos</a>
                 <a class="btn btn-sm btn-outline-primary" href="{{ path('modules_index') }}">Modulos</a>
                 <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_logout') }}">Salir</a>
             {% endif %}
@@ -152,5 +302,30 @@
     {% endfor %}
     {% block body %}{% endblock %}
 </main>
+<script>
+document.querySelectorAll('.ci-panel:not(.ci-no-auto-reveal)').forEach((panel, index) => {
+    if (panel.classList.contains('ci-fade-up')) {
+        return;
+    }
+    panel.style.opacity = '0';
+    panel.style.transform = 'translateY(10px)';
+    setTimeout(() => {
+        panel.style.transition = 'opacity .26s ease, transform .26s ease, box-shadow .18s ease, border-color .18s ease';
+        panel.style.opacity = '1';
+        panel.style.transform = 'translateY(0)';
+    }, Math.min(index * 28, 420));
+});
+
+document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', () => {
+        const label = input.closest('.ci-quick-action');
+        if (!label || !input.files.length) {
+            return;
+        }
+        label.style.borderColor = '#0f766e';
+        label.style.background = '#eef7f6';
+    });
+});
+</script>
 </body>
 </html>
