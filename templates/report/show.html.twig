@@ -58,7 +58,11 @@
         <div class="ci-panel p-3 h-100">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="h5 mb-0">Evolucion mensual</h2>
-                <span class="badge text-bg-light border">visitas y EUR</span>
+                <div class="ci-segment" aria-label="Modo de evolucion mensual">
+                    <button class="active" type="button" data-month-mode="combo">Mixto</button>
+                    <button type="button" data-month-mode="visits">Visitas</button>
+                    <button type="button" data-month-mode="revenue">EUR</button>
+                </div>
             </div>
             <div id="monthlyTrend" class="ci-chart"></div>
         </div>
@@ -118,6 +122,7 @@
 const charts = {{ c|json_encode|raw }};
 const palette = ['#0f766e', '#c2410c', '#b45309', '#6d5bd0', '#2563eb', '#64748b'];
 const chartRegistry = [];
+let monthlyChart = null;
 
 function entries(data) {
     return Object.entries(data || {}).filter(([, value]) => Number(value) !== 0);
@@ -137,7 +142,13 @@ function mount(id, options) {
         chart: {
             height: 330,
             foreColor: '#475569',
-            animations: { enabled: true, easing: 'easeinout', speed: 650 },
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 900,
+                animateGradually: { enabled: true, delay: 110 },
+                dynamicAnimation: { enabled: true, speed: 450 }
+            },
             toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } }
         },
         grid: { borderColor: '#e5edf3', strokeDashArray: 4 },
@@ -147,16 +158,28 @@ function mount(id, options) {
     });
     chart.render();
     chartRegistry.push({ id: id.replace('#', ''), chart });
+    return chart;
 }
 
 const monthCategories = [...new Set([...labels(charts.visits_by_month), ...labels(charts.revenue_by_month)])].sort();
-mount('#monthlyTrend', {
-    chart: { type: 'line', height: 360, toolbar: { show: true } },
-    series: [
+const monthlySeries = {
+    combo: [
         { name: 'Visitas', type: 'column', data: monthCategories.map(key => Number((charts.visits_by_month || {})[key] || 0)) },
         { name: 'Facturacion', type: 'line', data: monthCategories.map(key => Number((charts.revenue_by_month || {})[key] || 0)) }
     ],
+    visits: [
+        { name: 'Visitas', type: 'area', data: monthCategories.map(key => Number((charts.visits_by_month || {})[key] || 0)) }
+    ],
+    revenue: [
+        { name: 'Facturacion', type: 'area', data: monthCategories.map(key => Number((charts.revenue_by_month || {})[key] || 0)) }
+    ]
+};
+
+monthlyChart = mount('#monthlyTrend', {
+    chart: { type: 'line', height: 360, toolbar: { show: true } },
+    series: monthlySeries.combo,
     stroke: { width: [0, 4], curve: 'smooth' },
+    fill: { type: ['solid', 'gradient'], gradient: { shadeIntensity: .15, opacityFrom: .38, opacityTo: .06 } },
     xaxis: { categories: monthCategories },
     yaxis: [{ title: { text: 'Visitas' } }, { opposite: true, title: { text: 'EUR' } }],
     plotOptions: { bar: { borderRadius: 5, columnWidth: '45%' } }
@@ -183,6 +206,43 @@ mountBar('#revenueByProfessional', 'EUR', charts.revenue_by_professional, true);
 mountBar('#specialties', 'Visitas', charts.visits_by_specialty, true);
 mountBar('#insurance', 'Visitas', charts.visits_by_insurance, true);
 mountBar('#cancellationsByWeekday', 'Cancelaciones', charts.cancellations_by_weekday);
+
+document.querySelectorAll('[data-month-mode]').forEach(button => {
+    button.addEventListener('click', () => {
+        document.querySelectorAll('[data-month-mode]').forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+        const mode = button.dataset.monthMode;
+        monthlyChart.updateOptions({
+            chart: { type: mode === 'combo' ? 'line' : 'area' },
+            series: monthlySeries[mode],
+            stroke: { width: mode === 'combo' ? [0, 4] : [4], curve: 'smooth' },
+            yaxis: mode === 'combo'
+                ? [{ title: { text: 'Visitas' } }, { opposite: true, title: { text: 'EUR' } }]
+                : [{ title: { text: mode === 'visits' ? 'Visitas' : 'EUR' } }]
+        }, true, true);
+    });
+});
+
+document.querySelectorAll('.ci-kpi-value').forEach((item) => {
+    const finalText = item.textContent.trim();
+    const numeric = Number(finalText.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, ''));
+    if (!Number.isFinite(numeric)) {
+        return;
+    }
+    let frame = 0;
+    const frames = 28;
+    const suffix = finalText.includes('EUR') ? ' EUR' : '';
+    const decimals = finalText.includes(',') ? 2 : 0;
+    const timer = setInterval(() => {
+        frame++;
+        const value = numeric * (frame / frames);
+        item.textContent = value.toLocaleString('es-ES', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
+        if (frame >= frames) {
+            item.textContent = finalText;
+            clearInterval(timer);
+        }
+    }, 22);
+});
 
 async function downloadCharts() {
     for (const item of chartRegistry) {

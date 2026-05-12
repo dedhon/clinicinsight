@@ -68,6 +68,45 @@
             min-height: 365px;
         }
 
+        .ci-panel {
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+        .ci-panel:hover {
+            transform: translateY(-2px);
+            border-color: #b8c7d5;
+            box-shadow: 0 16px 36px rgba(23, 33, 43, .10);
+        }
+
+        .ci-kpi-value {
+            transition: color .2s ease;
+        }
+
+        .ci-segment {
+            display: inline-flex;
+            gap: 4px;
+            padding: 4px;
+            background: #eef4f7;
+            border: 1px solid var(--ci-line);
+            border-radius: 8px;
+        }
+
+        .ci-segment button {
+            border: 0;
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: transparent;
+            color: var(--ci-muted);
+            font-size: .875rem;
+            font-weight: 700;
+        }
+
+        .ci-segment button.active {
+            background: #fff;
+            color: var(--ci-ink);
+            box-shadow: 0 2px 8px rgba(23, 33, 43, .08);
+        }
+
         .ci-actionbar {
             position: sticky;
             top: 0;
