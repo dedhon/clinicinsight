@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\UploadedFile as UploadedDatasetFile;
+use App\Service\DatasetProfilerService;
 use App\Service\ColumnDetectionService;
 use App\Service\NormalizationService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,12 +22,14 @@ class MappingController extends AbstractController
         UploadedDatasetFile $uploadedFile,
         Request $request,
         EntityManagerInterface $em,
+        DatasetProfilerService $datasetProfiler,
         NormalizationService $normalizationService,
     ): Response|RedirectResponse {
         if ($uploadedFile->getProject()->getUser()->getUserIdentifier() !== $this->getUser()?->getUserIdentifier()) {
             throw $this->createAccessDeniedException();
         }
 
+        //Prdsfsd
         if ($request->isMethod('POST')) {
             $mapping = [];
             foreach ($uploadedFile->getColumns() as $column) {
@@ -53,6 +56,7 @@ class MappingController extends AbstractController
         return $this->render('upload/mapping.html.twig', [
             'uploadedFile' => $uploadedFile,
             'allowedFields' => ColumnDetectionService::ALLOWED_FIELDS,
+            'profile' => $datasetProfiler->profile($uploadedFile),
         ]);
     }
 }

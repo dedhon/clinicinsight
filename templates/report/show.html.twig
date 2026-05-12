@@ -5,58 +5,380 @@
 {% block body %}
 {% set k = report.kpis %}
 {% set c = report.charts %}
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h1 class="h3 mb-1">Dashboard</h1>
-        <p class="text-muted">{{ uploadedFile.originalName }}</p>
+{% set g = report.charts.generic|default({}) %}
+
+<div class="ci-actionbar py-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h3 mb-1">Dashboard ejecutivo</h1>
+            <div class="text-muted">{{ uploadedFile.project.name }} · {{ uploadedFile.originalName }}</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="{{ path('project_show', {id: uploadedFile.project.id}) }}">Proyecto</a>
+            <a class="btn btn-outline-secondary" href="{{ path('data_explorer', {id: uploadedFile.id}) }}">Ver datos</a>
+            <a class="btn btn-outline-secondary" href="{{ path('report_show', {id: uploadedFile.id, refresh: 1}) }}">Recalcular</a>
+            <a class="btn btn-outline-primary" href="{{ path('report_export_powerbi', {id: uploadedFile.id}) }}">Power BI CSV</a>
+            <a class="btn btn-outline-primary" href="{{ path('report_export_json', {id: uploadedFile.id}) }}">JSON</a>
+            <button class="btn btn-primary" type="button" onclick="downloadCharts()">Exportar graficos</button>
+            <button class="btn btn-dark" type="button" onclick="window.print()">Imprimir</button>
+        </div>
     </div>
-    <a class="btn btn-outline-secondary" href="{{ path('project_show', {id: uploadedFile.project.id}) }}">Proyecto</a>
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">Visitas totales</div><div class="h3">{{ k.total_visits }}</div></div></div></div>
-    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">Cancelaciones</div><div class="h3">{{ k.cancelled_visits }}</div></div></div></div>
-    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">No presentados</div><div class="h3">{{ k.no_show_visits }}</div></div></div></div>
-    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">Facturacion</div><div class="h3">{{ k.total_revenue|number_format(2, ',', '.') }} EUR</div></div></div></div>
-    <div class="col-md"><div class="card"><div class="card-body"><div class="text-muted">Ticket medio</div><div class="h3">{{ k.average_ticket|number_format(2, ',', '.') }} EUR</div></div></div></div>
+    <div class="col-lg-3">
+        <div class="ci-panel ci-kpi p-3" style="--accent: #2563eb">
+            <div class="ci-kpi-label">Motor BI generico</div>
+            <div class="ci-kpi-value">{{ g.row_count|default(0) }}</div>
+            <div class="ci-kpi-sub">filas analizadas</div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="ci-panel ci-kpi p-3" style="--accent: #0f766e">
+            <div class="ci-kpi-label">Columnas</div>
+            <div class="ci-kpi-value">{{ g.column_count|default(0) }}</div>
+            <div class="ci-kpi-sub">perfiladas automaticamente</div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="ci-panel p-3 h-100">
+            <div class="ci-kpi-label mb-2">Tipos detectados</div>
+            <div class="d-flex flex-wrap gap-2">
+                {% for type, columns in g.types|default({}) %}
+                    <span class="badge text-bg-light border">{{ type }} · {{ columns|length }}</span>
+                {% endfor %}
+            </div>
+            <div class="small text-muted mt-3">Este bloque funciona con cualquier Excel/CSV/JSON: ventas, inventario, operaciones, RRHH o clinica.</div>
+        </div>
+    </div>
 </div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-teal)">
+            <div class="ci-kpi-label">Visitas totales</div>
+            <div class="ci-kpi-value">{{ k.total_visits }}</div>
+            <div class="ci-kpi-sub">{{ k.completed_rate|default(0) }}% realizadas</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-coral)">
+            <div class="ci-kpi-label">Incidencias</div>
+            <div class="ci-kpi-value">{{ k.cancelled_visits + k.no_show_visits }}</div>
+            <div class="ci-kpi-sub">{{ k.cancellation_rate|default(0) }}% canceladas o no show</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-amber)">
+            <div class="ci-kpi-label">Facturacion total</div>
+            <div class="ci-kpi-value">{{ k.total_revenue|number_format(2, ',', '.') }} EUR</div>
+            <div class="ci-kpi-sub">Sobre visitas normalizadas</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-violet)">
+            <div class="ci-kpi-label">Ticket medio</div>
+            <div class="ci-kpi-value">{{ k.average_ticket|number_format(2, ',', '.') }} EUR</div>
+            <div class="ci-kpi-sub">{{ k.completed_visits }} visitas realizadas</div>
+        </div>
+    </div>
+</div>
+
+{% if g.charts|default({}) %}
+<div class="ci-panel p-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h5 mb-1">Explorador BI automatico</h2>
+            <div class="text-muted small">Graficos recomendados a partir de todos los campos del archivo.</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <select class="form-select" id="genericChartSelect" style="min-width: 320px">
+                {% for key, chart in g.charts %}
+                    {% if chart.type != 'metric' %}
+                        <option value="{{ key }}">{{ chart.title }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <button class="btn btn-outline-primary" type="button" id="randomGenericChart">Sorprendeme</button>
+        </div>
+    </div>
+    <div id="genericBiChart" class="ci-chart"></div>
+</div>
+
+<div class="row g-3 mb-4">
+    {% for key, chart in g.charts|slice(0, 4) %}
+        {% if chart.type == 'metric' %}
+            <div class="col-md-6 col-xl-3">
+                <div class="ci-panel p-3 h-100">
+                    <div class="ci-kpi-label">{{ chart.metric }}</div>
+                    <div class="d-flex justify-content-between small border-bottom py-1"><span>Suma</span><strong>{{ chart.data.sum|default(0)|number_format(2, ',', '.') }}</strong></div>
+                    <div class="d-flex justify-content-between small border-bottom py-1"><span>Media</span><strong>{{ chart.data.avg|default(0)|number_format(2, ',', '.') }}</strong></div>
+                    <div class="d-flex justify-content-between small border-bottom py-1"><span>Min</span><strong>{{ chart.data.min|default(0)|number_format(2, ',', '.') }}</strong></div>
+                    <div class="d-flex justify-content-between small py-1"><span>Max</span><strong>{{ chart.data.max|default(0)|number_format(2, ',', '.') }}</strong></div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
 
 <div class="row g-4">
-    <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="h5">Visitas por mes</h2><div id="visitsByMonth"></div></div></div></div>
-    <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="h5">Facturacion por mes</h2><div id="revenueByMonth"></div></div></div></div>
-    <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="h5">Visitas por profesional</h2><div id="visitsByProfessional"></div></div></div></div>
-    <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="h5">Cancelaciones por dia</h2><div id="cancellationsByWeekday"></div></div></div></div>
+    <div class="col-xl-8">
+        <div class="ci-panel p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h5 mb-0">Evolucion mensual</h2>
+                <div class="ci-segment" aria-label="Modo de evolucion mensual">
+                    <button class="active" type="button" data-month-mode="combo">Mixto</button>
+                    <button type="button" data-month-mode="visits">Visitas</button>
+                    <button type="button" data-month-mode="revenue">EUR</button>
+                </div>
+            </div>
+            <div id="monthlyTrend" class="ci-chart"></div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="ci-panel p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h5 mb-0">Estado de citas</h2>
+                <span class="badge text-bg-light border">mix</span>
+            </div>
+            <div id="statusMix" class="ci-chart"></div>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="ci-panel p-3 h-100">
+            <h2 class="h5 mb-2">Visitas por profesional</h2>
+            <div id="visitsByProfessional" class="ci-chart"></div>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="ci-panel p-3 h-100">
+            <h2 class="h5 mb-2">Facturacion por profesional</h2>
+            <div id="revenueByProfessional" class="ci-chart"></div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="ci-panel p-3 h-100">
+            <h2 class="h5 mb-2">Especialidades</h2>
+            <div id="specialties" class="ci-chart"></div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="ci-panel p-3 h-100">
+            <h2 class="h5 mb-2">Aseguradoras</h2>
+            <div id="insurance" class="ci-chart"></div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="ci-panel p-3 h-100">
+            <h2 class="h5 mb-2">Cancelaciones por dia</h2>
+            <div id="cancellationsByWeekday" class="ci-chart"></div>
+        </div>
+    </div>
 </div>
 
-<div class="card mt-4">
-    <div class="card-body">
-        <h2 class="h5">Insight IA</h2>
-        <p class="mb-0">{{ report.summary }}</p>
+<div class="ci-panel p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+        <div>
+            <h2 class="h5 mb-2">Insight IA</h2>
+            <p class="mb-0 text-muted">{{ report.summary }}</p>
+        </div>
+        <span class="badge text-bg-light border">solo agregados</span>
     </div>
 </div>
 
 <script>
 const charts = {{ c|json_encode|raw }};
-function renderBar(id, title, data) {
-    new ApexCharts(document.querySelector(id), {
-        chart: { type: 'bar', height: 300, toolbar: { show: false } },
-        series: [{ name: title, data: Object.values(data) }],
-        xaxis: { categories: Object.keys(data) },
-        dataLabels: { enabled: false }
-    }).render();
+const genericBi = {{ g|json_encode|raw }};
+const palette = ['#0f766e', '#c2410c', '#b45309', '#6d5bd0', '#2563eb', '#64748b'];
+const chartRegistry = [];
+let monthlyChart = null;
+
+function entries(data) {
+    return Object.entries(data || {}).filter(([, value]) => Number(value) !== 0);
 }
-function renderLine(id, title, data) {
-    new ApexCharts(document.querySelector(id), {
-        chart: { type: 'line', height: 300, toolbar: { show: false } },
-        series: [{ name: title, data: Object.values(data) }],
-        xaxis: { categories: Object.keys(data) },
-        stroke: { curve: 'smooth' }
-    }).render();
+
+function labels(data) {
+    return entries(data).map(([label]) => label);
 }
-renderLine('#visitsByMonth', 'Visitas', charts.visits_by_month || {});
-renderLine('#revenueByMonth', 'EUR', charts.revenue_by_month || {});
-renderBar('#visitsByProfessional', 'Visitas', charts.visits_by_professional || {});
-renderBar('#cancellationsByWeekday', 'Cancelaciones', charts.cancellations_by_weekday || {});
+
+function values(data) {
+    return entries(data).map(([, value]) => Number(value));
+}
+
+function mount(id, options) {
+    const chart = new ApexCharts(document.querySelector(id), {
+        colors: palette,
+        chart: {
+            height: 330,
+            foreColor: '#475569',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 900,
+                animateGradually: { enabled: true, delay: 110 },
+                dynamicAnimation: { enabled: true, speed: 450 }
+            },
+            toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } }
+        },
+        grid: { borderColor: '#e5edf3', strokeDashArray: 4 },
+        dataLabels: { enabled: false },
+        legend: { position: 'top' },
+        ...options
+    });
+    chart.render();
+    chartRegistry.push({ id: id.replace('#', ''), chart });
+    return chart;
+}
+
+const monthCategories = [...new Set([...labels(charts.visits_by_month), ...labels(charts.revenue_by_month)])].sort();
+const monthlySeries = {
+    combo: [
+        { name: 'Visitas', type: 'column', data: monthCategories.map(key => Number((charts.visits_by_month || {})[key] || 0)) },
+        { name: 'Facturacion', type: 'line', data: monthCategories.map(key => Number((charts.revenue_by_month || {})[key] || 0)) }
+    ],
+    visits: [
+        { name: 'Visitas', type: 'area', data: monthCategories.map(key => Number((charts.visits_by_month || {})[key] || 0)) }
+    ],
+    revenue: [
+        { name: 'Facturacion', type: 'area', data: monthCategories.map(key => Number((charts.revenue_by_month || {})[key] || 0)) }
+    ]
+};
+
+monthlyChart = mount('#monthlyTrend', {
+    chart: { type: 'line', height: 360, toolbar: { show: true } },
+    series: monthlySeries.combo,
+    stroke: { width: [0, 4], curve: 'smooth' },
+    fill: { type: ['solid', 'gradient'], gradient: { shadeIntensity: .15, opacityFrom: .38, opacityTo: .06 } },
+    xaxis: { categories: monthCategories },
+    yaxis: [{ title: { text: 'Visitas' } }, { opposite: true, title: { text: 'EUR' } }],
+    plotOptions: { bar: { borderRadius: 5, columnWidth: '45%' } }
+});
+
+mount('#statusMix', {
+    chart: { type: 'donut', height: 330, toolbar: { show: true } },
+    labels: labels(charts.visits_by_status),
+    series: values(charts.visits_by_status),
+    plotOptions: { pie: { donut: { size: '66%', labels: { show: true, total: { show: true, label: 'Total' } } } } }
+});
+
+function mountBar(id, name, data, horizontal = false) {
+    mount(id, {
+        chart: { type: 'bar', height: 330, toolbar: { show: true } },
+        series: [{ name, data: values(data) }],
+        xaxis: { categories: labels(data) },
+        plotOptions: { bar: { horizontal, borderRadius: 5, distributed: false } }
+    });
+}
+
+mountBar('#visitsByProfessional', 'Visitas', charts.visits_by_professional, true);
+mountBar('#revenueByProfessional', 'EUR', charts.revenue_by_professional, true);
+mountBar('#specialties', 'Visitas', charts.visits_by_specialty, true);
+mountBar('#insurance', 'Visitas', charts.visits_by_insurance, true);
+mountBar('#cancellationsByWeekday', 'Cancelaciones', charts.cancellations_by_weekday);
+
+let genericChart = null;
+function renderGenericChart(key) {
+    const definition = (genericBi.charts || {})[key];
+    if (!definition || definition.type === 'metric') {
+        return;
+    }
+
+    const data = definition.data || {};
+    const options = {
+        colors: palette,
+        chart: {
+            type: definition.type === 'line' ? 'area' : 'bar',
+            height: 360,
+            foreColor: '#475569',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 850,
+                animateGradually: { enabled: true, delay: 90 },
+                dynamicAnimation: { enabled: true, speed: 450 }
+            },
+            toolbar: { show: true }
+        },
+        title: { text: definition.title, style: { fontSize: '15px', fontWeight: 700 } },
+        series: [{ name: definition.metric || 'valor', data: values(data) }],
+        xaxis: { categories: labels(data) },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: definition.type === 'line' ? 4 : 0 },
+        fill: definition.type === 'line' ? { type: 'gradient', gradient: { opacityFrom: .38, opacityTo: .06 } } : {},
+        plotOptions: { bar: { horizontal: labels(data).length > 6, borderRadius: 5 } },
+        tooltip: { theme: 'light' },
+        grid: { borderColor: '#e5edf3', strokeDashArray: 4 }
+    };
+
+    if (genericChart) {
+        genericChart.updateOptions(options, true, true);
+        return;
+    }
+
+    genericChart = new ApexCharts(document.querySelector('#genericBiChart'), options);
+    genericChart.render();
+    chartRegistry.push({ id: 'genericBiChart', chart: genericChart });
+}
+
+const genericSelect = document.querySelector('#genericChartSelect');
+if (genericSelect) {
+    renderGenericChart(genericSelect.value);
+    genericSelect.addEventListener('change', () => renderGenericChart(genericSelect.value));
+}
+
+document.querySelector('#randomGenericChart')?.addEventListener('click', () => {
+    const options = Array.from(genericSelect.options);
+    const next = options[Math.floor(Math.random() * options.length)];
+    genericSelect.value = next.value;
+    renderGenericChart(next.value);
+});
+
+document.querySelectorAll('[data-month-mode]').forEach(button => {
+    button.addEventListener('click', () => {
+        document.querySelectorAll('[data-month-mode]').forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+        const mode = button.dataset.monthMode;
+        monthlyChart.updateOptions({
+            chart: { type: mode === 'combo' ? 'line' : 'area' },
+            series: monthlySeries[mode],
+            stroke: { width: mode === 'combo' ? [0, 4] : [4], curve: 'smooth' },
+            yaxis: mode === 'combo'
+                ? [{ title: { text: 'Visitas' } }, { opposite: true, title: { text: 'EUR' } }]
+                : [{ title: { text: mode === 'visits' ? 'Visitas' : 'EUR' } }]
+        }, true, true);
+    });
+});
+
+document.querySelectorAll('.ci-kpi-value').forEach((item) => {
+    const finalText = item.textContent.trim();
+    const numeric = Number(finalText.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, ''));
+    if (!Number.isFinite(numeric)) {
+        return;
+    }
+    let frame = 0;
+    const frames = 28;
+    const suffix = finalText.includes('EUR') ? ' EUR' : '';
+    const decimals = finalText.includes(',') ? 2 : 0;
+    const timer = setInterval(() => {
+        frame++;
+        const value = numeric * (frame / frames);
+        item.textContent = value.toLocaleString('es-ES', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
+        if (frame >= frames) {
+            item.textContent = finalText;
+            clearInterval(timer);
+        }
+    }, 22);
+});
+
+async function downloadCharts() {
+    for (const item of chartRegistry) {
+        const image = await item.chart.dataURI();
+        const link = document.createElement('a');
+        link.href = image.imgURI;
+        link.download = `clinicinsight-${item.id}.png`;
+        link.click();
+    }
+}
 </script>
 {% endblock %}
-

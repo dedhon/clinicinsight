@@ -52,7 +52,19 @@ class NormalizationService
             return $value->format('Y-m-d');
         }
 
-        $timestamp = strtotime((string) $value);
+        if (is_numeric($value) && (float) $value > 25000 && (float) $value < 90000) {
+            return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $value)->format('Y-m-d');
+        }
+
+        $text = trim((string) $value);
+        foreach (['d/m/Y', 'd-m-Y', 'Y-m-d', 'm/d/Y'] as $format) {
+            $date = \DateTimeImmutable::createFromFormat($format, $text);
+            if ($date instanceof \DateTimeImmutable) {
+                return $date->format('Y-m-d');
+            }
+        }
+
+        $timestamp = strtotime($text);
         return $timestamp ? date('Y-m-d', $timestamp) : null;
     }
 
@@ -67,4 +79,3 @@ class NormalizationService
         };
     }
 }
-

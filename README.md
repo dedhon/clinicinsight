@@ -53,12 +53,20 @@ DATABASE_URL="mysql://clinic_user:clinic_password@127.0.0.1:3306/clinicinsight?s
 OPENAI_API_KEY=""
 OPENAI_MODEL="gpt-5.2"
 UPLOADS_DIR="var/uploads"
+DATA_ENCRYPTION_KEY="base64_de_32_bytes"
+```
+
+Generar clave local:
+
+```powershell
+php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
 ```
 
 ## Comandos utiles
 
 ```powershell
 php bin/console doctrine:migrations:migrate
+php bin/console app:reencrypt-dataset-rows
 php bin/console app:create-user admin@clinicinsight.local admin123 Admin
 php bin/console cache:clear
 ```
@@ -69,4 +77,3 @@ php bin/console cache:clear
 - Para mapeo IA solo enviar cabeceras y pocos ejemplos truncados.
 - Para insights IA solo enviar KPIs agregados.
 - Ignorar columnas sensibles como nombre, DNI, telefono, email, direccion, diagnostico, tratamiento, notas, CIP e historia clinica.
-

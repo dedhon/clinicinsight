@@ -3,11 +3,83 @@
 {% block title %}Mapeo - ClinicInsight{% endblock %}
 
 {% block body %}
-<h1 class="h3 mb-1">Confirmar mapeo</h1>
-<p class="text-muted">Archivo: {{ uploadedFile.originalName }}. Revisa columnas sensibles antes de normalizar.</p>
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="h3 mb-1">Confirmar mapeo</h1>
+        <p class="text-muted mb-0">Archivo: {{ uploadedFile.originalName }}. Revisa columnas sensibles antes de normalizar.</p>
+    </div>
+    <span class="badge text-bg-light border">{{ uploadedFile.rowCount }} filas</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="ci-panel p-3 h-100">
+            <div class="ci-kpi-label">Compatibilidad</div>
+            <div class="d-flex align-items-end gap-2">
+                <div class="ci-kpi-value">{{ profile.score }}%</div>
+                <div class="pb-2 text-muted">{{ profile.level }}</div>
+            </div>
+            <div class="progress mt-2" role="progressbar" aria-valuenow="{{ profile.score }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar {{ profile.score >= 75 ? 'bg-success' : (profile.score >= 45 ? 'bg-warning' : 'bg-danger') }}" style="width: {{ profile.score }}%"></div>
+            </div>
+            <div class="small text-muted mt-3">{{ profile.type }}</div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="ci-panel p-3 h-100">
+            <div class="ci-kpi-label">Columnas</div>
+            <div class="d-flex gap-3 mt-2">
+                <div><div class="h4 mb-0">{{ profile.mapped_count }}</div><div class="small text-muted">mapeadas</div></div>
+                <div><div class="h4 mb-0">{{ profile.ignored_count }}</div><div class="small text-muted">ignoradas</div></div>
+                <div><div class="h4 mb-0">{{ profile.total_columns }}</div><div class="small text-muted">totales</div></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="ci-panel p-3 h-100">
+            <div class="ci-kpi-label">Avisos</div>
+            {% if profile.warnings %}
+                <ul class="small mb-0 mt-2 ps-3">
+                    {% for warning in profile.warnings %}
+                        <li>{{ warning }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="small text-muted mb-0 mt-2">No hay avisos relevantes para este archivo.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="ci-panel p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Preview de datos</h2>
+        <span class="badge text-bg-light border">primeras {{ profile.preview_rows|length }} filas</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead>
+            <tr>
+                {% for column in uploadedFile.columns %}
+                    <th>{{ column.originalName }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in profile.preview_rows %}
+                <tr>
+                    {% for column in uploadedFile.columns %}
+                        <td class="small text-nowrap">{{ row[column.originalName]|default('') }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <form method="post">
-    <div class="table-responsive bg-white border rounded">
+    <div class="table-responsive ci-panel">
         <table class="table align-middle mb-0">
             <thead>
             <tr>
@@ -21,7 +93,10 @@
             <tbody>
             {% for column in uploadedFile.columns %}
                 <tr>
-                    <td class="fw-semibold">{{ column.originalName }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ column.originalName }}</div>
+                        <div class="small text-muted">{{ column.detectedType ?: 'tipo no detectado' }}</div>
+                    </td>
                     <td class="small text-muted">{{ column.exampleValues|default([])|join(', ') }}</td>
                     <td>
                         <select class="form-select" name="mapped_field[{{ column.id }}]">
@@ -34,7 +109,14 @@
                     <td class="text-center">
                         <input class="form-check-input" type="checkbox" name="ignored[{{ column.id }}]" value="1" {{ column.ignored ? 'checked' }}>
                     </td>
-                    <td class="small text-muted">{{ column.reason }}</td>
+                    <td class="small">
+                        {% if column.ignored %}
+                            <span class="badge text-bg-warning">sensible</span>
+                        {% elseif column.mappedField %}
+                            <span class="badge text-bg-success">{{ (column.confidence * 100)|round }}%</span>
+                        {% endif %}
+                        <div class="text-muted mt-1">{{ column.reason }}</div>
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -43,4 +125,3 @@
     <button class="btn btn-primary mt-3">Normalizar y generar dashboard</button>
 </form>
 {% endblock %}
-

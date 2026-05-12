@@ -40,15 +40,18 @@ class UploadController extends AbstractController
             mkdir($uploadsDir, 0775, true);
         }
 
-        $storedName = bin2hex(random_bytes(16)) . '.' . $file->guessExtension();
+        $originalName = $file->getClientOriginalName();
+        $mimeType = $file->getMimeType() ?? 'application/octet-stream';
+        $extension = $file->guessExtension() ?: pathinfo($originalName, PATHINFO_EXTENSION) ?: 'dat';
+        $storedName = bin2hex(random_bytes(16)) . '.' . $extension;
         $file->move($uploadsDir, $storedName);
         $path = rtrim($uploadsDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $storedName;
 
         $uploaded = (new UploadedDatasetFile())
             ->setProject($project)
             ->setFilename($storedName)
-            ->setOriginalName($file->getClientOriginalName())
-            ->setMimeType($file->getMimeType() ?? 'application/octet-stream');
+            ->setOriginalName($originalName)
+            ->setMimeType($mimeType);
         $em->persist($uploaded);
 
         try {
