@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Informe - ClinicInsight{% endblock %}
+{% block title %}{{ 'report.title'|trans }} - ClinicInsight{% endblock %}
 
 {% block body %}
 {% set k = report.kpis %}
@@ -10,17 +10,17 @@
 <div class="ci-actionbar py-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <h1 class="h3 mb-1">Dashboard ejecutivo</h1>
+            <h1 class="h3 mb-1">{{ 'report.executive_dashboard'|trans }}</h1>
             <div class="text-muted">{{ uploadedFile.project.name }} · {{ uploadedFile.originalName }}</div>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-secondary" href="{{ path('project_show', {id: uploadedFile.project.id}) }}">Proyecto</a>
-            <a class="btn btn-outline-secondary" href="{{ path('data_explorer', {id: uploadedFile.id}) }}">Ver datos</a>
-            <a class="btn btn-outline-secondary" href="{{ path('report_show', {id: uploadedFile.id, refresh: 1}) }}">Recalcular</a>
+            <a class="btn btn-outline-secondary" href="{{ path('project_show', {id: uploadedFile.project.id}) }}">{{ 'project.project'|trans }}</a>
+            <a class="btn btn-outline-secondary" href="{{ path('data_explorer', {id: uploadedFile.id}) }}">{{ 'report.view_data'|trans }}</a>
+            <a class="btn btn-outline-secondary" href="{{ path('report_show', {id: uploadedFile.id, refresh: 1}) }}">{{ 'report.recalculate'|trans }}</a>
             <a class="btn btn-outline-primary" href="{{ path('report_export_powerbi', {id: uploadedFile.id}) }}">Power BI CSV</a>
             <a class="btn btn-outline-primary" href="{{ path('report_export_json', {id: uploadedFile.id}) }}">JSON</a>
-            <button class="btn btn-primary" type="button" onclick="downloadCharts()">Exportar graficos</button>
-            <button class="btn btn-dark" type="button" onclick="window.print()">Imprimir</button>
+            <button class="btn btn-primary" type="button" onclick="downloadCharts()">{{ 'report.export_charts'|trans }}</button>
+            <button class="btn btn-dark" type="button" onclick="window.print()">{{ 'report.print'|trans }}</button>
         </div>
     </div>
 </div>
@@ -28,27 +28,27 @@
 <div class="row g-3 mb-4">
     <div class="col-lg-3">
         <div class="ci-panel ci-kpi p-3" style="--accent: #2563eb">
-            <div class="ci-kpi-label">Motor BI generico</div>
+            <div class="ci-kpi-label">{{ 'report.generic_bi_engine'|trans }}</div>
             <div class="ci-kpi-value">{{ g.row_count|default(0) }}</div>
-            <div class="ci-kpi-sub">filas analizadas</div>
+            <div class="ci-kpi-sub">{{ 'report.rows_analyzed'|trans }}</div>
         </div>
     </div>
     <div class="col-lg-3">
         <div class="ci-panel ci-kpi p-3" style="--accent: #0f766e">
-            <div class="ci-kpi-label">Columnas</div>
+            <div class="ci-kpi-label">{{ 'report.columns'|trans }}</div>
             <div class="ci-kpi-value">{{ g.column_count|default(0) }}</div>
-            <div class="ci-kpi-sub">perfiladas automaticamente</div>
+            <div class="ci-kpi-sub">{{ 'report.profiled_auto'|trans }}</div>
         </div>
     </div>
     <div class="col-lg-6">
         <div class="ci-panel p-3 h-100">
-            <div class="ci-kpi-label mb-2">Tipos detectados</div>
+            <div class="ci-kpi-label mb-2">{{ 'report.detected_types'|trans }}</div>
             <div class="d-flex flex-wrap gap-2">
                 {% for type, columns in g.types|default({}) %}
                     <span class="badge text-bg-light border">{{ type }} · {{ columns|length }}</span>
                 {% endfor %}
             </div>
-            <div class="small text-muted mt-3">Este bloque funciona con cualquier Excel/CSV/JSON: ventas, inventario, operaciones, RRHH o clinica.</div>
+            <div class="small text-muted mt-3">{{ 'report.generic_help'|trans }}</div>
         </div>
     </div>
 </div>
@@ -56,30 +56,30 @@
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
         <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-teal)">
-            <div class="ci-kpi-label">Visitas totales</div>
+            <div class="ci-kpi-label">{{ 'report.total_visits'|trans }}</div>
             <div class="ci-kpi-value">{{ k.total_visits }}</div>
-            <div class="ci-kpi-sub">{{ k.completed_rate|default(0) }}% realizadas</div>
+            <div class="ci-kpi-sub">{{ 'report.completed_rate'|trans({'{rate}': k.completed_rate|default(0)}) }}</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-coral)">
-            <div class="ci-kpi-label">Incidencias</div>
+            <div class="ci-kpi-label">{{ 'report.incidents'|trans }}</div>
             <div class="ci-kpi-value">{{ k.cancelled_visits + k.no_show_visits }}</div>
-            <div class="ci-kpi-sub">{{ k.cancellation_rate|default(0) }}% canceladas o no show</div>
+            <div class="ci-kpi-sub">{{ 'report.cancelled_rate'|trans({'{rate}': k.cancellation_rate|default(0)}) }}</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-amber)">
-            <div class="ci-kpi-label">Facturacion total</div>
+            <div class="ci-kpi-label">{{ 'report.total_revenue'|trans }}</div>
             <div class="ci-kpi-value">{{ k.total_revenue|number_format(2, ',', '.') }} EUR</div>
-            <div class="ci-kpi-sub">Sobre visitas normalizadas</div>
+            <div class="ci-kpi-sub">{{ 'report.normalized_visits'|trans }}</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-violet)">
-            <div class="ci-kpi-label">Ticket medio</div>
+            <div class="ci-kpi-label">{{ 'report.average_ticket'|trans }}</div>
             <div class="ci-kpi-value">{{ k.average_ticket|number_format(2, ',', '.') }} EUR</div>
-            <div class="ci-kpi-sub">{{ k.completed_visits }} visitas realizadas</div>
+            <div class="ci-kpi-sub">{{ 'report.completed_visits'|trans({'{count}': k.completed_visits}) }}</div>
         </div>
     </div>
 </div>
@@ -88,8 +88,8 @@
 <div class="ci-panel p-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
-            <h2 class="h5 mb-1">Explorador BI automatico</h2>
-            <div class="text-muted small">Graficos recomendados a partir de todos los campos del archivo.</div>
+            <h2 class="h5 mb-1">{{ 'report.auto_explorer'|trans }}</h2>
+            <div class="text-muted small">{{ 'report.auto_explorer_help'|trans }}</div>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <select class="form-select" id="genericChartSelect" style="min-width: 320px">
@@ -99,7 +99,7 @@
                     {% endif %}
                 {% endfor %}
             </select>
-            <button class="btn btn-outline-primary" type="button" id="randomGenericChart">Sorprendeme</button>
+            <button class="btn btn-outline-primary" type="button" id="randomGenericChart">{{ 'report.surprise_me'|trans }}</button>
         </div>
     </div>
     <div id="genericBiChart" class="ci-chart"></div>
@@ -111,8 +111,8 @@
             <div class="col-md-6 col-xl-3">
                 <div class="ci-panel p-3 h-100">
                     <div class="ci-kpi-label">{{ chart.metric }}</div>
-                    <div class="d-flex justify-content-between small border-bottom py-1"><span>Suma</span><strong>{{ chart.data.sum|default(0)|number_format(2, ',', '.') }}</strong></div>
-                    <div class="d-flex justify-content-between small border-bottom py-1"><span>Media</span><strong>{{ chart.data.avg|default(0)|number_format(2, ',', '.') }}</strong></div>
+                    <div class="d-flex justify-content-between small border-bottom py-1"><span>{{ 'report.sum'|trans }}</span><strong>{{ chart.data.sum|default(0)|number_format(2, ',', '.') }}</strong></div>
+                    <div class="d-flex justify-content-between small border-bottom py-1"><span>{{ 'report.avg'|trans }}</span><strong>{{ chart.data.avg|default(0)|number_format(2, ',', '.') }}</strong></div>
                     <div class="d-flex justify-content-between small border-bottom py-1"><span>Min</span><strong>{{ chart.data.min|default(0)|number_format(2, ',', '.') }}</strong></div>
                     <div class="d-flex justify-content-between small py-1"><span>Max</span><strong>{{ chart.data.max|default(0)|number_format(2, ',', '.') }}</strong></div>
                 </div>
@@ -126,10 +126,10 @@
     <div class="col-xl-8">
         <div class="ci-panel p-3 h-100">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h2 class="h5 mb-0">Evolucion mensual</h2>
-                <div class="ci-segment" aria-label="Modo de evolucion mensual">
-                    <button class="active" type="button" data-month-mode="combo">Mixto</button>
-                    <button type="button" data-month-mode="visits">Visitas</button>
+                <h2 class="h5 mb-0">{{ 'report.monthly_evolution'|trans }}</h2>
+                <div class="ci-segment" aria-label="{{ 'report.monthly_evolution_mode'|trans }}">
+                    <button class="active" type="button" data-month-mode="combo">{{ 'report.mixed'|trans }}</button>
+                    <button type="button" data-month-mode="visits">{{ 'report.visits'|trans }}</button>
                     <button type="button" data-month-mode="revenue">EUR</button>
                 </div>
             </div>
@@ -139,7 +139,7 @@
     <div class="col-xl-4">
         <div class="ci-panel p-3 h-100">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h2 class="h5 mb-0">Estado de citas</h2>
+                <h2 class="h5 mb-0">{{ 'report.appointment_status'|trans }}</h2>
                 <span class="badge text-bg-light border">mix</span>
             </div>
             <div id="statusMix" class="ci-chart"></div>
@@ -147,31 +147,31 @@
     </div>
     <div class="col-xl-6">
         <div class="ci-panel p-3 h-100">
-            <h2 class="h5 mb-2">Visitas por profesional</h2>
+            <h2 class="h5 mb-2">{{ 'report.visits_by_professional'|trans }}</h2>
             <div id="visitsByProfessional" class="ci-chart"></div>
         </div>
     </div>
     <div class="col-xl-6">
         <div class="ci-panel p-3 h-100">
-            <h2 class="h5 mb-2">Facturacion por profesional</h2>
+            <h2 class="h5 mb-2">{{ 'report.revenue_by_professional'|trans }}</h2>
             <div id="revenueByProfessional" class="ci-chart"></div>
         </div>
     </div>
     <div class="col-xl-4">
         <div class="ci-panel p-3 h-100">
-            <h2 class="h5 mb-2">Especialidades</h2>
+            <h2 class="h5 mb-2">{{ 'report.specialties'|trans }}</h2>
             <div id="specialties" class="ci-chart"></div>
         </div>
     </div>
     <div class="col-xl-4">
         <div class="ci-panel p-3 h-100">
-            <h2 class="h5 mb-2">Aseguradoras</h2>
+            <h2 class="h5 mb-2">{{ 'report.insurers'|trans }}</h2>
             <div id="insurance" class="ci-chart"></div>
         </div>
     </div>
     <div class="col-xl-4">
         <div class="ci-panel p-3 h-100">
-            <h2 class="h5 mb-2">Cancelaciones por dia</h2>
+            <h2 class="h5 mb-2">{{ 'report.cancellations_by_day'|trans }}</h2>
             <div id="cancellationsByWeekday" class="ci-chart"></div>
         </div>
     </div>
@@ -180,10 +180,10 @@
 <div class="ci-panel p-4 mt-4">
     <div class="d-flex justify-content-between align-items-start gap-3">
         <div>
-            <h2 class="h5 mb-2">Insight IA</h2>
+            <h2 class="h5 mb-2">{{ 'report.ai_insight'|trans }}</h2>
             <p class="mb-0 text-muted">{{ report.summary }}</p>
         </div>
-        <span class="badge text-bg-light border">solo agregados</span>
+        <span class="badge text-bg-light border">{{ 'report.aggregates_only'|trans }}</span>
     </div>
 </div>
 

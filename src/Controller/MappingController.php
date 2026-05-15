@@ -24,12 +24,13 @@ class MappingController extends AbstractController
         EntityManagerInterface $em,
         DatasetProfilerService $datasetProfiler,
         NormalizationService $normalizationService,
+        ColumnDetectionService $columnDetectionService,
     ): Response|RedirectResponse {
-        if ($uploadedFile->getProject()->getUser()->getUserIdentifier() !== $this->getUser()?->getUserIdentifier()) {
+        $project = $uploadedFile->getProject();
+        if (!$this->isGranted('ROLE_SUPER_ADMIN') && $project->getUser()->getUserIdentifier() !== $this->getUser()?->getUserIdentifier() && !$project->isSharedWith($this->getUser())) {
             throw $this->createAccessDeniedException();
         }
 
-        //Prdsfsd
         if ($request->isMethod('POST')) {
             $mapping = [];
             foreach ($uploadedFile->getColumns() as $column) {
@@ -56,7 +57,19 @@ class MappingController extends AbstractController
         return $this->render('upload/mapping.html.twig', [
             'uploadedFile' => $uploadedFile,
             'allowedFields' => ColumnDetectionService::ALLOWED_FIELDS,
+            'fieldLabels' => ColumnDetectionService::FIELD_LABELS,
+            'fieldSuggestions' => $this->buildFieldSuggestions($uploadedFile, $columnDetectionService),
             'profile' => $datasetProfiler->profile($uploadedFile),
         ]);
+    }
+
+    private function buildFieldSuggestions(UploadedDatasetFile $uploadedFile, ColumnDetectionService $columnDetectionService): array
+    {
+        $suggestions = [];
+        foreach ($uploadedFile->getColumns() as $column) {
+            $suggestions[$column->getId()] = $column->getMappedField() ?? $columnDetectionService->suggestField($column->getOriginalName()) ?? '';
+        }
+
+        return $suggestions;
     }
 }

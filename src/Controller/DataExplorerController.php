@@ -15,7 +15,8 @@ class DataExplorerController extends AbstractController
     #[Route('/upload/{id}/data', name: 'data_explorer', methods: ['GET'])]
     public function index(UploadedDatasetFile $uploadedFile, Request $request): Response
     {
-        if ($uploadedFile->getProject()->getUser()->getUserIdentifier() !== $this->getUser()?->getUserIdentifier()) {
+        $project = $uploadedFile->getProject();
+        if (!$this->isGranted('ROLE_SUPER_ADMIN') && $project->getUser()->getUserIdentifier() !== $this->getUser()?->getUserIdentifier() && !$project->isSharedWith($this->getUser())) {
             throw $this->createAccessDeniedException();
         }
 

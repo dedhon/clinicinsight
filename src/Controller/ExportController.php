@@ -71,7 +71,8 @@ class ExportController extends AbstractController
 
     private function getAuthorizedReport(UploadedDatasetFile $uploadedFile, EntityManagerInterface $em): InsightReport
     {
-        if ($uploadedFile->getProject()->getUser()->getUserIdentifier() !== $this->getUser()?->getUserIdentifier()) {
+        $project = $uploadedFile->getProject();
+        if (!$this->isGranted('ROLE_SUPER_ADMIN') && $project->getUser()->getUserIdentifier() !== $this->getUser()?->getUserIdentifier() && !$project->isSharedWith($this->getUser())) {
             throw $this->createAccessDeniedException();
         }
 

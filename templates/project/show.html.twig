@@ -6,13 +6,13 @@
 <div class="ci-actionbar py-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <div class="ci-eyebrow mb-1">Proyecto</div>
+            <div class="ci-eyebrow mb-1">{{ project.customer.name }} / {{ 'project.project'|trans }}</div>
             <h1 class="h3 mb-1">{{ project.name }}</h1>
-            <div class="text-muted">{{ project.description ?: 'Sin descripcion. Puedes empezar subiendo un dataset.' }}</div>
+            <div class="text-muted">{{ project.description ?: 'project.no_description'|trans }}</div>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-secondary" href="{{ path('dashboard') }}">Proyectos</a>
-            <a class="btn btn-outline-primary" href="{{ path('modules_index') }}">Modulos</a>
+            <a class="btn btn-outline-secondary" href="{{ path('dashboard') }}">{{ 'nav.projects'|trans }}</a>
+            <a class="btn btn-outline-primary" href="{{ path('modules_index') }}">{{ 'nav.modules'|trans }}</a>
         </div>
     </div>
 </div>
@@ -23,28 +23,94 @@
             <div class="d-flex align-items-center gap-3 mb-3">
                 <span class="ci-icon-box">UP</span>
                 <div>
-                    <h2 class="h5 mb-1">Subir dataset</h2>
-                    <div class="small text-muted">Excel, CSV o JSON</div>
+                    <h2 class="h5 mb-1">{{ 'project.import_data'|trans }}</h2>
+                    <div class="small text-muted">{{ 'project.supported_files'|trans }}</div>
                 </div>
             </div>
-            <form method="post" enctype="multipart/form-data" action="{{ path('project_upload', {id: project.id}) }}">
-                <label class="ci-quick-action w-100 mb-3" for="datasetInput">
-                    <div class="fw-semibold">Selecciona o arrastra tu archivo</div>
-                    <div class="small text-muted">Se validaran columnas, tipos y compatibilidad antes de analizar.</div>
-                    <input class="form-control mt-3" id="datasetInput" type="file" name="dataset" accept=".xlsx,.xls,.csv,.json" required>
-                </label>
-                <button class="btn btn-primary w-100 btn-lg">Subir y validar</button>
-            </form>
-            <form method="post" action="{{ path('project_demo', {id: project.id}) }}" class="mt-3">
-                <button class="btn ci-soft-btn w-100" type="submit">Crear dataset demo</button>
-            </form>
+            {% if canManageSharing %}
+                <form method="post" enctype="multipart/form-data" action="{{ path('project_upload', {id: project.id}) }}">
+                    <label class="ci-quick-action w-100 mb-3" for="datasetInput">
+                        <div class="fw-semibold">{{ 'project.select_file'|trans }}</div>
+                        <div class="small text-muted">{{ 'project.import_help'|trans }}</div>
+                        <div class="small fw-semibold mt-2 text-success" data-file-name></div>
+                        <input class="form-control mt-3" id="datasetInput" type="file" name="dataset" accept=".xlsx,.xls,.csv,.json" required>
+                    </label>
+                    <button class="btn btn-primary w-100 btn-lg">{{ 'project.import_prepare'|trans }}</button>
+                </form>
+                <form method="post" action="{{ path('project_demo', {id: project.id}) }}" class="mt-3">
+                    <button class="btn ci-soft-btn w-100" type="submit">{{ 'project.demo'|trans }}</button>
+                </form>
+            {% else %}
+                <div class="ci-quick-action">
+                    <div class="fw-semibold">{{ 'project.readonly'|trans }}</div>
+                    <div class="small text-muted">{{ 'project.readonly_text'|trans }}</div>
+                </div>
+            {% endif %}
         </div>
 
         <div class="ci-panel p-3">
-            <div class="ci-kpi-label mb-3">Accesos rapidos</div>
+            <div class="ci-kpi-label mb-3">{{ 'project.smart_flow'|trans }}</div>
             <div class="d-grid gap-2">
-                <a class="btn btn-outline-primary text-start" href="{{ path('modules_index') }}">Configurar modulos</a>
-                <a class="btn btn-outline-secondary text-start" href="{{ path('dashboard') }}">Volver al workspace</a>
+                <div class="ci-quick-action">
+                    <div class="fw-semibold">{{ 'project.flow_1_title'|trans }}</div>
+                    <div class="small text-muted">{{ 'project.flow_1_text'|trans }}</div>
+                </div>
+                <div class="ci-quick-action">
+                    <div class="fw-semibold">{{ 'project.flow_2_title'|trans }}</div>
+                    <div class="small text-muted">{{ 'project.flow_2_text'|trans }}</div>
+                </div>
+                <div class="ci-quick-action">
+                    <div class="fw-semibold">{{ 'project.flow_3_title'|trans }}</div>
+                    <div class="small text-muted">{{ 'project.flow_3_text'|trans }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ci-panel p-3 mt-4">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <div class="ci-kpi-label">{{ 'project.access'|trans }}</div>
+                    <h2 class="h6 mb-1">{{ 'project.share_project'|trans }}</h2>
+                    <div class="small text-muted">{{ 'project.share_help'|trans }}</div>
+                </div>
+                <span class="badge text-bg-light border">{{ project.shares|length }} {{ 'project.invited'|trans }}</span>
+            </div>
+
+            {% if canManageSharing %}
+                <form method="post" action="{{ path('project_share_add', {id: project.id}) }}" class="d-flex gap-2 mb-3">
+                    <input type="hidden" name="_token" value="{{ csrf_token('project_share_' ~ project.id) }}">
+                    <select class="form-select" name="user_id" {{ shareableUsers is empty ? 'disabled' }}>
+                        {% for user in shareableUsers %}
+                            <option value="{{ user.id }}">{{ user.name }} · {{ user.email }}</option>
+                        {% else %}
+                            <option>{{ 'project.no_users'|trans }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-outline-primary" {{ shareableUsers is empty ? 'disabled' }}>{{ 'project.share'|trans }}</button>
+                </form>
+            {% endif %}
+
+            <div class="d-grid gap-2">
+                <div class="ci-quick-action">
+                    <div class="fw-semibold">{{ project.user.name }}</div>
+                    <div class="small text-muted">{{ project.user.email }} · {{ 'project.owner'|trans }}</div>
+                </div>
+                {% for share in project.shares %}
+                    <div class="ci-quick-action d-flex justify-content-between align-items-center gap-2">
+                        <div>
+                            <div class="fw-semibold">{{ share.user.name }}</div>
+                            <div class="small text-muted">{{ share.user.email }} · {{ 'project.guest'|trans }}</div>
+                        </div>
+                        {% if canManageSharing %}
+                            <form method="post" action="{{ path('project_share_remove', {id: project.id, shareId: share.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('project_share_remove_' ~ share.id) }}">
+                                <button class="btn btn-sm btn-outline-danger">{{ 'project.remove'|trans }}</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="small text-muted">{{ 'project.not_shared'|trans }}</div>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -52,16 +118,16 @@
     <div class="col-xl-8">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h2 class="h4 mb-1">Archivos del proyecto</h2>
-                <div class="text-muted">Abre el siguiente paso segun el estado de cada dataset.</div>
+                <h2 class="h4 mb-1">{{ 'project.files'|trans }}</h2>
+                <div class="text-muted">{{ 'project.traceability'|trans({'{customer}': project.customer.name}) }}</div>
             </div>
-            <span class="badge text-bg-light border">{{ project.uploadedFiles|length }} datasets</span>
+            <span class="badge text-bg-light border">{{ 'project.dataset_count'|trans({'{count}': project.uploadedFiles|length}) }}</span>
         </div>
 
         <div class="row g-3">
             {% for file in project.uploadedFiles %}
                 {% set targetRoute = file.status == 'parsed' ? 'upload_mapping' : 'report_show' %}
-                {% set targetLabel = file.status == 'parsed' ? 'Mapear' : 'Dashboard' %}
+                {% set targetLabel = file.status == 'parsed' ? 'project.map'|trans : 'dashboard.dashboard'|trans %}
                 <div class="col-12">
                     <div class="ci-panel p-3 ci-fade-up" style="animation-delay: {{ loop.index0 * 45 }}ms">
                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -69,14 +135,14 @@
                                 <span class="ci-icon-box">{{ file.originalName|split('.')|last|upper|slice(0, 3) }}</span>
                                 <div>
                                     <h3 class="h6 mb-1">{{ file.originalName }}</h3>
-                                    <div class="small text-muted">{{ file.rowCount }} filas · {{ file.mimeType }}</div>
+                                    <div class="small text-muted">{{ 'project.row_count'|trans({'{count}': file.rowCount}) }} · {{ file.mimeType }}</div>
                                 </div>
                             </div>
                             <div class="d-flex flex-wrap align-items-center gap-2">
                                 <span class="ci-status-pill">{{ file.status }}</span>
                                 <a class="btn btn-sm btn-primary" href="{{ path(targetRoute, {id: file.id}) }}">{{ targetLabel }}</a>
                                 {% if file.status != 'parsed' and file.status != 'error' %}
-                                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('data_explorer', {id: file.id}) }}">Datos</a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('data_explorer', {id: file.id}) }}">{{ 'data.protected'|trans }}</a>
                                 {% endif %}
                             </div>
                         </div>
@@ -86,8 +152,8 @@
                 <div class="col-12">
                     <div class="ci-panel p-5 text-center">
                         <div class="ci-icon-box mx-auto mb-3">XL</div>
-                        <h2 class="h5">Aun no hay archivos</h2>
-                        <p class="text-muted mb-0">Sube un Excel, CSV o JSON para activar preview, mapeo y graficos.</p>
+                        <h2 class="h5">{{ 'project.no_files'|trans }}</h2>
+                        <p class="text-muted mb-0">{{ 'project.no_files_text'|trans }}</p>
                     </div>
                 </div>
             {% endfor %}
@@ -95,3 +161,4 @@
     </div>
 </div>
 {% endblock %}
+

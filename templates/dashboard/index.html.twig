@@ -1,26 +1,26 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard - ClinicInsight{% endblock %}
+{% block title %}{{ 'dashboard.your_projects'|trans }} - ClinicInsight{% endblock %}
 
 {% block body %}
 <section class="ci-hero p-4 p-lg-5 mb-4 ci-fade-up">
     <div class="row align-items-center g-4 position-relative">
         <div class="col-lg-7">
-            <div class="ci-eyebrow mb-2">Workspace BI</div>
-            <h1 class="ci-page-title mb-3">Convierte archivos en decisiones.</h1>
-            <p class="lead ci-muted mb-4">Sube Excel, CSV o JSON, valida columnas, protege datos sensibles y genera dashboards ejecutivos listos para compartir.</p>
+            <div class="ci-eyebrow mb-2">{{ app.user.customer.name }}</div>
+            <h1 class="ci-page-title mb-3">{{ 'dashboard.title'|trans }}</h1>
+            <p class="lead ci-muted mb-4">{{ 'dashboard.subtitle'|trans({'{customer}': app.user.customer.name}) }}</p>
             <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-primary btn-lg" href="{{ path('project_new') }}">Nuevo proyecto</a>
-                <a class="btn ci-soft-btn btn-lg" href="{{ path('modules_index') }}">Ver modulos</a>
+                <a class="btn btn-primary btn-lg" href="{{ path('project_new') }}">{{ 'dashboard.new_project'|trans }}</a>
+                <a class="btn ci-soft-btn btn-lg" href="{{ path('modules_index') }}">{{ 'dashboard.view_modules'|trans }}</a>
             </div>
         </div>
         <div class="col-lg-5">
             <div class="row g-3">
                 <div class="col-6">
                     <div class="ci-panel ci-kpi p-3">
-                        <div class="ci-kpi-label">Proyectos</div>
+                        <div class="ci-kpi-label">{{ 'common.projects'|trans }}</div>
                         <div class="ci-kpi-value">{{ projects|length }}</div>
-                        <div class="ci-kpi-sub">en tu cuenta</div>
+                        <div class="ci-kpi-sub">{{ 'nav.account'|trans }}</div>
                     </div>
                 </div>
                 <div class="col-6">
@@ -29,20 +29,20 @@
                         {% set totalFiles = totalFiles + project.uploadedFiles|length %}
                     {% endfor %}
                     <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-blue)">
-                        <div class="ci-kpi-label">Datasets</div>
+                        <div class="ci-kpi-label">{{ 'project.files'|trans }}</div>
                         <div class="ci-kpi-value">{{ totalFiles }}</div>
-                        <div class="ci-kpi-sub">archivos cargados</div>
+                        <div class="ci-kpi-sub">{{ 'dashboard.loaded_files'|trans }}</div>
                     </div>
                 </div>
                 <div class="col-12">
                     <div class="ci-panel p-3">
-                        <div class="ci-kpi-label mb-2">Flujo recomendado</div>
+                        <div class="ci-kpi-label mb-2">{{ 'dashboard.recommended_flow'|trans }}</div>
                         <div class="d-flex flex-wrap gap-2">
-                            <span class="ci-status-pill">Subir</span>
-                            <span class="ci-status-pill">Validar</span>
-                            <span class="ci-status-pill">Mapear</span>
-                            <span class="ci-status-pill">Analizar</span>
-                            <span class="ci-status-pill">Exportar</span>
+                            <span class="ci-status-pill">{{ 'dashboard.import_all'|trans }}</span>
+                            <span class="ci-status-pill">{{ 'dashboard.detect'|trans }}</span>
+                            <span class="ci-status-pill">{{ 'dashboard.review'|trans }}</span>
+                            <span class="ci-status-pill">{{ 'dashboard.dashboard'|trans }}</span>
+                            <span class="ci-status-pill">{{ 'dashboard.export'|trans }}</span>
                         </div>
                     </div>
                 </div>
@@ -53,10 +53,10 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
     <div>
-        <h2 class="h4 mb-1">Tus proyectos</h2>
-        <div class="text-muted">Accede rapido a datasets, informes y exploradores.</div>
+        <h2 class="h4 mb-1">{{ 'dashboard.your_projects'|trans }}</h2>
+        <div class="text-muted">{{ 'dashboard.project_hint'|trans }}</div>
     </div>
-    <a class="btn btn-outline-primary" href="{{ path('project_new') }}">Crear proyecto</a>
+    <a class="btn btn-outline-primary" href="{{ path('project_new') }}">{{ 'dashboard.create_project'|trans }}</a>
 </div>
 
 <div class="row g-3">
@@ -65,13 +65,13 @@
             <a class="ci-card-link ci-panel p-3 h-100 ci-fade-up" style="animation-delay: {{ loop.index0 * 45 }}ms" href="{{ path('project_show', {id: project.id}) }}">
                 <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                     <span class="ci-icon-box">{{ project.name|slice(0, 1)|upper }}</span>
-                    <span class="badge text-bg-light border">{{ project.uploadedFiles|length }} archivos</span>
+                    <span class="badge text-bg-light border">{{ 'dashboard.file_count'|trans({'{count}': project.uploadedFiles|length}) }}</span>
                 </div>
                 <h3 class="h5 mb-2">{{ project.name }}</h3>
-                <p class="text-muted small mb-3">{{ project.description ?: 'Proyecto BI preparado para nuevos datasets.' }}</p>
+                <p class="text-muted small mb-3">{{ project.description ?: 'dashboard.default_description'|trans }}</p>
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="small text-muted">Actualizado</span>
-                    <span class="btn btn-sm btn-primary">Abrir</span>
+                    <span class="small text-muted">{{ project.user.userIdentifier == app.user.userIdentifier ? 'dashboard.own'|trans : 'dashboard.shared_with_you'|trans }}</span>
+                    <span class="btn btn-sm btn-primary">{{ 'dashboard.open'|trans }}</span>
                 </div>
             </a>
         </div>
@@ -79,9 +79,9 @@
         <div class="col-12">
             <div class="ci-panel p-4 text-center">
                 <div class="ci-icon-box mx-auto mb-3">+</div>
-                <h2 class="h5">Todavia no hay proyectos</h2>
-                <p class="text-muted">Crea uno y sube tu primer Excel o CSV para empezar a generar graficos.</p>
-                <a class="btn btn-primary" href="{{ path('project_new') }}">Crear primer proyecto</a>
+                <h2 class="h5">{{ 'dashboard.empty_title'|trans }}</h2>
+                <p class="text-muted">{{ 'dashboard.empty_text'|trans }}</p>
+                <a class="btn btn-primary" href="{{ path('project_new') }}">{{ 'dashboard.create_project'|trans }}</a>
             </div>
         </div>
     {% endfor %}

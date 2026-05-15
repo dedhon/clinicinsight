@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'settings.title'|trans }} - ClinicInsight{% endblock %}
+
+{% block body %}
+<div class="ci-actionbar py-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <div class="ci-eyebrow mb-1">{{ 'settings.eyebrow'|trans }}</div>
+            <h1 class="h3 mb-1">{{ customer.name }}</h1>
+            <div class="text-muted">{{ 'settings.subtitle'|trans }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            {% if is_granted('ROLE_SUPER_ADMIN') %}
+                <a class="btn btn-outline-danger" href="{{ path('admin_customer_show', {id: customer.id}) }}">{{ 'settings.admin_customer'|trans }}</a>
+            {% endif %}
+            <a class="btn btn-outline-secondary" href="{{ path('dashboard') }}">{{ 'nav.projects'|trans }}</a>
+        </div>
+    </div>
+</div>
+
+<section class="ci-hero p-4 mb-4 ci-fade-up">
+    <div class="row g-3 align-items-center position-relative">
+        <div class="col-lg-7">
+            <div class="ci-eyebrow mb-2">{{ 'settings.current_session'|trans }}</div>
+            <h2 class="h4 mb-2">{{ currentUser.name }}</h2>
+            <p class="ci-muted mb-0">{{ currentUser.email }} · {{ currentUser.roles|join(', ') }}</p>
+        </div>
+        <div class="col-lg-5">
+            <div class="row g-2">
+                <div class="col-4"><div class="ci-panel p-3 text-center"><div class="ci-kpi-label">{{ 'common.plan'|trans }}</div><div class="fw-bold">{{ plan.label }}</div></div></div>
+                <div class="col-4"><div class="ci-panel p-3 text-center"><div class="ci-kpi-label">{{ 'common.status'|trans }}</div><div class="fw-bold">{{ statusLabels[customer.subscriptionStatus]|default(customer.subscriptionStatus) }}</div></div></div>
+                <div class="col-4"><div class="ci-panel p-3 text-center"><div class="ci-kpi-label">{{ 'common.users'|trans }}</div><div class="fw-bold">{{ customer.users|length }}</div></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-4">
+        <div class="ci-panel p-4 h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="ci-icon-box">TU</span>
+                <div>
+                    <h2 class="h5 mb-1">{{ 'settings.your_data'|trans }}</h2>
+                    <div class="small text-muted">{{ 'settings.your_data_help'|trans }}</div>
+                </div>
+            </div>
+            <form method="post" action="{{ path('customer_settings_profile') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('settings_profile') }}">
+                <label class="form-label fw-semibold" for="name">{{ 'settings.display_name'|trans }}</label>
+                <input class="form-control mb-3" id="name" name="name" value="{{ currentUser.name }}" required>
+                <label class="form-label fw-semibold">{{ 'settings.access_email'|trans }}</label>
+                <input class="form-control mb-3" value="{{ currentUser.email }}" disabled>
+                <label class="form-label fw-semibold" for="locale">{{ 'settings.app_language'|trans }}</label>
+                <select class="form-select mb-3" id="locale" name="locale">
+                    {% for code, label in locales %}
+                        <option value="{{ code }}" {{ currentUser.locale == code ? 'selected' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary w-100">{{ 'settings.save_profile'|trans }}</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="ci-panel p-4 h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="ci-icon-box">PW</span>
+                <div>
+                    <h2 class="h5 mb-1">{{ 'settings.security'|trans }}</h2>
+                    <div class="small text-muted">{{ 'settings.security_help'|trans }}</div>
+                </div>
+            </div>
+            <form method="post" action="{{ path('customer_settings_password') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('settings_password') }}">
+                <input class="form-control mb-2" name="current_password" type="password" placeholder="{{ 'settings.current_password'|trans }}" required>
+                <input class="form-control mb-2" name="new_password" type="password" placeholder="{{ 'settings.new_password'|trans }}" minlength="8" required>
+                <input class="form-control mb-3" name="confirm_password" type="password" placeholder="{{ 'settings.confirm_password'|trans }}" minlength="8" required>
+                <button class="btn btn-outline-primary w-100">{{ 'settings.update_password'|trans }}</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="ci-panel p-4 h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="ci-icon-box">BI</span>
+                <div>
+                    <h2 class="h5 mb-1">{{ 'settings.billing'|trans }}</h2>
+                    <div class="small text-muted">{{ 'settings.billing_help'|trans }}</div>
+                </div>
+            </div>
+            <dl class="row mb-0">
+                <dt class="col-5">{{ 'settings.email'|trans }}</dt>
+                <dd class="col-7">{{ customer.billingEmail ?: 'settings.pending'|trans }}</dd>
+                <dt class="col-5">Stripe</dt>
+                <dd class="col-7">{{ customer.stripeCustomerId ?: 'settings.pending'|trans }}</dd>
+                <dt class="col-5">{{ 'common.plan'|trans }}</dt>
+                <dd class="col-7">{{ plan.label }} · {{ plan.monthly_price }} €/{{ 'settings.month'|trans }}</dd>
+                <dt class="col-5">{{ 'common.status'|trans }}</dt>
+                <dd class="col-7">{{ statusLabels[customer.subscriptionStatus]|default(customer.subscriptionStatus) }}</dd>
+                <dt class="col-5">{{ 'settings.limits'|trans }}</dt>
+                <dd class="col-7">{{ 'settings.limits_value'|trans({'{users}': plan.max_users, '{projects}': plan.max_projects, '{storage}': plan.max_storage_gb}) }}</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="ci-panel p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="h5 mb-1">{{ 'settings.members'|trans }}</h2>
+                    <div class="small text-muted">{{ 'settings.members_help'|trans({'{customer}': customer.name}) }}</div>
+                </div>
+                <span class="badge text-bg-light border">{{ 'settings.user_count'|trans({'{count}': customer.users|length}) }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>{{ 'settings.user'|trans }}</th><th>{{ 'settings.role'|trans }}</th><th>{{ 'settings.created_at'|trans }}</th></tr></thead>
+                    <tbody>
+                    {% for user in customer.users %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ user.name }} {{ user.id == currentUser.id ? ('settings.you'|trans) }}</div>
+                                <div class="small text-muted">{{ user.email }}</div>
+                            </td>
+                            <td class="small">{{ user.roles|join(', ') }}</td>
+                            <td class="small text-muted">{{ user.createdAt|date('d/m/Y') }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="ci-panel p-4 h-100">
+            <h2 class="h5 mb-3">{{ 'settings.project_privacy'|trans }}</h2>
+            <div class="d-grid gap-2">
+                <div class="ci-quick-action">
+                    <div class="fw-semibold">{{ 'settings.privacy_private_title'|trans }}</div>
+                    <div class="small text-muted">{{ 'settings.privacy_private_text'|trans }}</div>
+                </div>
+                <div class="ci-quick-action">
+                    <div class="fw-semibold">{{ 'settings.privacy_share_title'|trans }}</div>
+                    <div class="small text-muted">{{ 'settings.privacy_share_text'|trans }}</div>
+                </div>
+                <div class="ci-quick-action">
+                    <div class="fw-semibold">{{ 'settings.privacy_owner_title'|trans }}</div>
+                    <div class="small text-muted">{{ 'settings.privacy_owner_text'|trans }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

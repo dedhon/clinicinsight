@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="{{ app.request.locale|default('es') }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -286,9 +286,14 @@
         </a>
         <div class="d-flex gap-2">
             {% if app.user %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ path('dashboard') }}">Proyectos</a>
-                <a class="btn btn-sm btn-outline-primary" href="{{ path('modules_index') }}">Modulos</a>
-                <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_logout') }}">Salir</a>
+                <span class="ci-status-pill d-none d-md-inline-flex">{{ app.user.customer.name }}</span>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ path('dashboard') }}">{{ 'nav.projects'|trans }}</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ path('customer_settings') }}">{{ 'nav.account'|trans }}</a>
+                <a class="btn btn-sm btn-outline-primary" href="{{ path('modules_index') }}">{{ 'nav.modules'|trans }}</a>
+                {% if is_granted('ROLE_SUPER_ADMIN') %}
+                    <a class="btn btn-sm btn-outline-danger" href="{{ path('admin_dashboard') }}">{{ 'nav.admin'|trans }}</a>
+                {% endif %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_logout') }}">{{ 'nav.logout'|trans }}</a>
             {% endif %}
         </div>
     </div>
@@ -324,6 +329,10 @@ document.querySelectorAll('input[type="file"]').forEach(input => {
         }
         label.style.borderColor = '#0f766e';
         label.style.background = '#eef7f6';
+        const filename = label.querySelector('[data-file-name]');
+        if (filename) {
+            filename.textContent = input.files[0].name;
+        }
     });
 });
 </script>

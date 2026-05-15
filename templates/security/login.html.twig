@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Login - ClinicInsight{% endblock %}
+{% block title %}{{ 'login.access'|trans }} - ClinicInsight{% endblock %}
 
 {% block body %}
 <div class="row min-vh-75 align-items-center justify-content-center">
@@ -9,8 +9,8 @@
             <div class="row g-4 align-items-center position-relative">
                 <div class="col-lg-6">
                     <div class="ci-eyebrow mb-2">ClinicInsight</div>
-                    <h1 class="ci-page-title mb-3">Dashboards claros para datos complejos.</h1>
-                    <p class="lead ci-muted mb-4">Accede a tus proyectos, sube datasets, valida privacidad y genera informes ejecutivos en minutos.</p>
+                    <h1 class="ci-page-title mb-3">{{ 'login.title'|trans }}</h1>
+                    <p class="lead ci-muted mb-4">{{ 'login.subtitle'|trans }}</p>
                     <div class="d-flex flex-wrap gap-2">
                         <span class="ci-status-pill">Cifrado</span>
                         <span class="ci-status-pill">BI automatico</span>
@@ -19,21 +19,21 @@
                 </div>
                 <div class="col-lg-5 offset-lg-1">
                     <div class="ci-panel p-4">
-                        <h2 class="h4 mb-3">Acceso</h2>
+                        <h2 class="h4 mb-3">{{ 'login.access'|trans }}</h2>
                         {% if error %}
                             <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
                         {% endif %}
                         <form method="post">
                             <div class="mb-3">
-                                <label class="form-label fw-semibold" for="email">Email</label>
+                                <label class="form-label fw-semibold" for="email">{{ 'login.email'|trans }}</label>
                                 <input type="email" value="{{ last_username }}" name="_username" id="email" class="form-control form-control-lg" autocomplete="email" required autofocus>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold" for="password">Password</label>
+                                <label class="form-label fw-semibold" for="password">{{ 'login.password'|trans }}</label>
                                 <input type="password" name="_password" id="password" class="form-control form-control-lg" autocomplete="current-password" required>
                             </div>
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                            <button class="btn btn-primary btn-lg w-100" type="submit">Entrar al panel</button>
+                            <button class="btn btn-primary btn-lg w-100" type="submit">{{ 'login.submit'|trans }}</button>
                         </form>
                     </div>
                 </div>

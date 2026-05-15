@@ -1,18 +1,18 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Datos - ClinicInsight{% endblock %}
+{% block title %}{{ 'data.explorer'|trans }} - ClinicInsight{% endblock %}
 
 {% block body %}
 <div class="ci-actionbar py-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <div class="ci-eyebrow mb-1">Datos protegidos</div>
-            <h1 class="h3 mb-1">Explorador de datos</h1>
+            <div class="ci-eyebrow mb-1">{{ 'data.protected'|trans }}</div>
+            <h1 class="h3 mb-1">{{ 'data.explorer'|trans }}</h1>
             <div class="text-muted">{{ uploadedFile.originalName }} · datos descifrados en sesion</div>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ path('report_show', {id: uploadedFile.id}) }}">Dashboard</a>
-            <a class="btn btn-outline-primary" href="{{ path('report_export_json', {id: uploadedFile.id}) }}">JSON agregado</a>
+            <a class="btn btn-outline-secondary" href="{{ path('report_show', {id: uploadedFile.id}) }}">{{ 'dashboard.dashboard'|trans }}</a>
+            <a class="btn btn-outline-primary" href="{{ path('report_export_json', {id: uploadedFile.id}) }}">{{ 'data.aggregated_json'|trans }}</a>
         </div>
     </div>
 </div>
@@ -20,14 +20,14 @@
 <div class="ci-panel p-3 mb-4 ci-fade-up">
     <form class="row g-2 align-items-center">
         <div class="col-lg-8">
-            <input class="form-control form-control-lg" name="q" value="{{ query }}" placeholder="Buscar en filas descifradas...">
+            <input class="form-control form-control-lg" name="q" value="{{ query }}" placeholder="{{ 'data.search_placeholder'|trans }}">
         </div>
         <div class="col-lg-4 d-flex gap-2">
-            <button class="btn btn-primary btn-lg flex-fill">Buscar</button>
-            <a class="btn btn-outline-secondary btn-lg" href="{{ path('data_explorer', {id: uploadedFile.id}) }}">Limpiar</a>
+            <button class="btn btn-primary btn-lg flex-fill">{{ 'data.search'|trans }}</button>
+            <a class="btn btn-outline-secondary btn-lg" href="{{ path('data_explorer', {id: uploadedFile.id}) }}">{{ 'data.clear'|trans }}</a>
         </div>
     </form>
-    <div class="small text-muted mt-3">Se muestran hasta 250 filas para mantener la pantalla fluida. No se envia nada a OpenAI desde esta vista.</div>
+    <div class="small text-muted mt-3">{{ 'data.limit_notice'|trans }}</div>
 </div>
 
 <div class="row g-3" id="dataCards">
@@ -35,23 +35,23 @@
         <div class="col-xl-6 data-card">
             <div class="ci-panel p-3 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h6 mb-0">Fila {{ row.row_number }}</h2>
-                    <button class="btn btn-sm btn-outline-primary" type="button" data-copy-row="{{ loop.index0 }}">Copiar JSON</button>
+                    <h2 class="h6 mb-0">{{ 'data.row'|trans }} {{ row.row_number }}</h2>
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-copy-row="{{ loop.index0 }}">{{ 'data.copy_json'|trans }}</button>
                 </div>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="ci-kpi-label mb-2">Normalizado</div>
+                        <div class="ci-kpi-label mb-2">{{ 'data.normalized'|trans }}</div>
                         {% for key, value in row.normalized %}
                             <div class="d-flex justify-content-between gap-3 border-bottom py-1 small">
                                 <span class="text-muted">{{ key }}</span>
                                 <span class="fw-semibold text-end">{{ value }}</span>
                             </div>
                         {% else %}
-                            <div class="small text-muted">Sin normalizar</div>
+                            <div class="small text-muted">{{ 'data.not_normalized'|trans }}</div>
                         {% endfor %}
                     </div>
                     <div class="col-md-6">
-                        <div class="ci-kpi-label mb-2">Original</div>
+                        <div class="ci-kpi-label mb-2">{{ 'data.original'|trans }}</div>
                         {% for key, value in row.raw %}
                             <div class="d-flex justify-content-between gap-3 border-bottom py-1 small">
                                 <span class="text-muted">{{ key }}</span>
@@ -65,7 +65,7 @@
         </div>
     {% else %}
         <div class="col-12">
-            <div class="alert alert-info">No hay filas que coincidan con la busqueda.</div>
+            <div class="alert alert-info">{{ 'data.no_rows'|trans }}</div>
         </div>
     {% endfor %}
 </div>
@@ -76,8 +76,8 @@ document.querySelectorAll('[data-copy-row]').forEach(button => {
         const id = button.dataset.copyRow;
         const payload = document.querySelector(`[data-row-json="${id}"]`).textContent;
         await navigator.clipboard.writeText(JSON.stringify(JSON.parse(payload), null, 2));
-        button.textContent = 'Copiado';
-        setTimeout(() => button.textContent = 'Copiar JSON', 1200);
+        button.textContent = '{{ 'data.copied'|trans }}';
+        setTimeout(() => button.textContent = '{{ 'data.copy_json'|trans }}', 1200);
     });
 });
 

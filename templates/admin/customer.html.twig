@@ -1,0 +1,276 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ customer.name }} - Administracion{% endblock %}
+
+{% block body %}
+{% set tabs = {
+    summary: 'Resumen',
+    users: 'Usuarios',
+    projects: 'Proyectos',
+    files: 'Archivos',
+    reports: 'Informes',
+    subscription: 'Suscripcion',
+    billing: 'Facturacion',
+    config: 'Configuracion'
+} %}
+
+<div class="ci-actionbar py-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <div class="ci-eyebrow mb-1">Backoffice / Cliente</div>
+            <h1 class="h3 mb-1">{{ customer.name }}</h1>
+            <div class="text-muted">{{ customer.slug }} - {{ statusLabels[customer.subscriptionStatus]|default(customer.subscriptionStatus) }} - {{ plan.label }}</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="{{ path('admin_dashboard') }}">Clientes</a>
+            <a class="btn btn-outline-primary" href="{{ path('dashboard') }}">App</a>
+        </div>
+    </div>
+</div>
+
+<div class="ci-segment mb-4 flex-wrap">
+    {% for key, label in tabs %}
+        <a class="btn btn-sm {{ activeTab == key ? 'btn-primary' : 'btn-outline-secondary' }}" href="{{ path('admin_customer_show', {id: customer.id, tab: key}) }}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+{% if activeTab == 'summary' %}
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="ci-panel ci-kpi p-3">
+                <div class="ci-kpi-label">Usuarios</div>
+                <div class="ci-kpi-value">{{ customer.users|length }}/{{ plan.max_users }}</div>
+                <div class="ci-kpi-sub">limite del plan {{ plan.label }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-blue)">
+                <div class="ci-kpi-label">Proyectos</div>
+                <div class="ci-kpi-value">{{ projects|length }}/{{ plan.max_projects }}</div>
+                <div class="ci-kpi-sub">workspaces del cliente</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-violet)">
+                <div class="ci-kpi-label">Datasets</div>
+                <div class="ci-kpi-value">{{ files|length }}/{{ plan.max_datasets }}</div>
+                <div class="ci-kpi-sub">{{ totalRows }} filas importadas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="ci-panel ci-kpi p-3" style="--accent: var(--ci-amber)">
+                <div class="ci-kpi-label">Informes</div>
+                <div class="ci-kpi-value">{{ reports|length }}</div>
+                <div class="ci-kpi-sub">generados por la app</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="ci-panel p-4 h-100">
+                <h2 class="h5 mb-3">Estado comercial</h2>
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Plan</dt>
+                    <dd class="col-sm-7">{{ plan.label }} - {{ plan.monthly_price }} euros/mes</dd>
+                    <dt class="col-sm-5">Cliente ideal</dt>
+                    <dd class="col-sm-7">{{ plan.target }}</dd>
+                    <dt class="col-sm-5">Suscripcion</dt>
+                    <dd class="col-sm-7">{{ statusLabels[customer.subscriptionStatus]|default(customer.subscriptionStatus) }}</dd>
+                    <dt class="col-sm-5">Email facturacion</dt>
+                    <dd class="col-sm-7">{{ customer.billingEmail ?: 'Pendiente' }}</dd>
+                    <dt class="col-sm-5">Stripe Customer</dt>
+                    <dd class="col-sm-7">{{ customer.stripeCustomerId ?: 'Pendiente' }}</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ci-panel p-4 h-100">
+                <h2 class="h5 mb-3">Ultimos archivos</h2>
+                <div class="d-grid gap-2">
+                    {% for file in files|slice(0, 4) %}
+                        <a class="ci-quick-action text-decoration-none text-reset" href="{{ path('report_show', {id: file.id}) }}">
+                            <div class="fw-semibold">{{ file.originalName }}</div>
+                            <div class="small text-muted">{{ file.project.name }} · {{ file.rowCount }} filas · {{ file.status }}</div>
+                        </a>
+                    {% else %}
+                        <div class="text-muted small">Aun no hay datasets.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% elseif activeTab == 'users' %}
+    <div class="ci-panel p-4 mb-4">
+        <h2 class="h5 mb-3">Crear usuario para {{ customer.name }}</h2>
+        {% if customer.users|length >= plan.max_users %}
+            <div class="alert alert-warning">Este cliente ya ha alcanzado el limite de {{ plan.max_users }} usuario/s del plan {{ plan.label }}. Cambia el plan para crear mas usuarios.</div>
+        {% endif %}
+        <form method="post" action="{{ path('admin_customer_user_create', {id: customer.id}) }}" class="row g-3 align-items-end">
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_customer_user_create_' ~ customer.id) }}">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Nombre</label>
+                <input class="form-control" name="name" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Email</label>
+                <input class="form-control" name="email" type="email" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Password temporal</label>
+                <input class="form-control" name="password" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="customer_admin" value="1">
+                    Administrador del cliente
+                </label>
+            </div>
+            <div class="col-md-1 d-grid">
+                <button class="btn btn-primary" {{ customer.users|length >= plan.max_users ? 'disabled' }}>Crear</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="ci-panel p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Usuario</th><th>Roles</th><th>Alta</th><th style="min-width: 260px">Permisos</th></tr></thead>
+                <tbody>
+                {% for user in customer.users %}
+                    <tr>
+                        <td><div class="fw-semibold">{{ user.name }}</div><div class="small text-muted">{{ user.email }}</div></td>
+                        <td class="small">{{ user.roles|join(', ') }}</td>
+                        <td class="small text-muted">{{ user.createdAt|date('d/m/Y') }}</td>
+                        <td>
+                            <form method="post" action="{{ path('admin_user_roles', {id: user.id}) }}" class="d-flex flex-wrap align-items-center gap-2">
+                                <input type="hidden" name="_token" value="{{ csrf_token('admin_user_' ~ user.id) }}">
+                                <input type="hidden" name="customer_id" value="{{ customer.id }}">
+                                <label class="form-check small mb-0"><input class="form-check-input" type="checkbox" name="customer_admin" value="1" {{ 'ROLE_CUSTOMER_ADMIN' in user.roles ? 'checked' }}> Administrador del cliente</label>
+                                <label class="form-check small mb-0"><input class="form-check-input" type="checkbox" name="super_admin" value="1" {{ 'ROLE_SUPER_ADMIN' in user.roles ? 'checked' }}> Superadministrador</label>
+                                <button class="btn btn-sm btn-outline-primary">Guardar</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% elseif activeTab == 'projects' %}
+    <div class="row g-3">
+        {% for project in projects %}
+            <div class="col-md-6 col-xl-4">
+                <a class="ci-card-link ci-panel p-3 h-100" href="{{ path('project_show', {id: project.id}) }}">
+                    <div class="d-flex justify-content-between gap-3 mb-3">
+                        <span class="ci-icon-box">{{ project.name|slice(0, 1)|upper }}</span>
+                        <span class="badge text-bg-light border">{{ project.uploadedFiles|length }} archivos</span>
+                    </div>
+                    <h2 class="h5 mb-2">{{ project.name }}</h2>
+                    <p class="small text-muted mb-3">{{ project.description ?: 'Sin descripcion' }}</p>
+                    <div class="small text-muted">Creado por {{ project.user.email }} · {{ project.updatedAt|date('d/m/Y') }}</div>
+                </a>
+            </div>
+        {% else %}
+            <div class="col-12"><div class="ci-panel p-4 text-muted">Este cliente aun no tiene proyectos.</div></div>
+        {% endfor %}
+    </div>
+{% elseif activeTab == 'files' %}
+    <div class="ci-panel p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Archivo</th><th>Proyecto</th><th>Estado</th><th>Filas</th><th>Fecha</th><th></th></tr></thead>
+                <tbody>
+                {% for file in files %}
+                    <tr>
+                        <td><div class="fw-semibold">{{ file.originalName }}</div><div class="small text-muted">{{ file.mimeType }}</div></td>
+                        <td>{{ file.project.name }}</td>
+                        <td><span class="ci-status-pill">{{ file.status }}</span></td>
+                        <td>{{ file.rowCount }}</td>
+                        <td class="small text-muted">{{ file.createdAt|date('d/m/Y H:i') }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ path('data_explorer', {id: file.id}) }}">Datos</a>
+                            <a class="btn btn-sm btn-primary" href="{{ path('report_show', {id: file.id}) }}">Informe</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No hay archivos.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% elseif activeTab == 'reports' %}
+    <div class="ci-panel p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Informe</th><th>Proyecto</th><th>Archivo</th><th>Creado</th><th></th></tr></thead>
+                <tbody>
+                {% for report in reports %}
+                    <tr>
+                        <td class="small">{{ report.summary|default('Sin resumen')|slice(0, 120) }}</td>
+                        <td>{{ report.project.name }}</td>
+                        <td>{{ report.uploadedFile.originalName }}</td>
+                        <td class="small text-muted">{{ report.createdAt|date('d/m/Y H:i') }}</td>
+                        <td class="text-end"><a class="btn btn-sm btn-primary" href="{{ path('report_show', {id: report.uploadedFile.id}) }}">Abrir</a></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay informes.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% elseif activeTab in ['subscription', 'billing', 'config'] %}
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <form method="post" action="{{ path('admin_customer_subscription', {id: customer.id}) }}" class="ci-panel p-4">
+                <input type="hidden" name="_token" value="{{ csrf_token('admin_customer_' ~ customer.id) }}">
+                <input type="hidden" name="redirect_to_customer" value="1">
+                <h2 class="h5 mb-3">Editar cuenta</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Plan</label>
+                        <select class="form-select" name="plan">
+                            {% for key, planOption in plans %}
+                                <option value="{{ key }}" {{ customer.plan == key ? 'selected' }}>{{ planOption.label }} - {{ planOption.monthly_price }} euros/mes</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Estado suscripcion</label>
+                        <select class="form-select" name="subscription_status">
+                            {% for status in statuses %}
+                                <option value="{{ status }}" {{ customer.subscriptionStatus == status ? 'selected' }}>{{ statusLabels[status]|default(status) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email facturacion</label>
+                        <input class="form-control" name="billing_email" value="{{ customer.billingEmail }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Stripe Customer ID</label>
+                        <input class="form-control" name="stripe_customer_id" value="{{ customer.stripeCustomerId }}">
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary">Guardar cambios</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-5">
+            <div class="ci-panel p-4 h-100">
+                <h2 class="h5 mb-3">Notas de control</h2>
+                <div class="d-grid gap-2">
+                    <div class="ci-quick-action"><div class="fw-semibold">{{ plan.label }}</div><div class="small text-muted">{{ plan.target }}</div></div>
+                    <div class="ci-quick-action"><div class="fw-semibold">Limites</div><div class="small text-muted">{{ plan.max_users }} usuarios - {{ plan.max_projects }} proyectos - {{ plan.max_datasets }} archivos - {{ plan.max_storage_gb }} GB total.</div></div>
+                    <div class="ci-quick-action"><div class="fw-semibold">Soporte</div><div class="small text-muted">{{ plan.support }} - IA {{ plan.ai_reports ? 'incluida' : 'no incluida' }}.</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="ci-panel p-4 text-muted">Seccion no disponible.</div>
+{% endif %}
+{% endblock %}

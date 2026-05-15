@@ -23,9 +23,35 @@ class FileParserService
     private function parseSpreadsheet(string $path): array
     {
         $spreadsheet = IOFactory::load($path);
-        $sheet = $spreadsheet->getActiveSheet();
-        $matrix = $sheet->toArray(null, true, true, true);
-        return $this->matrixToDataset($matrix);
+        $allHeaders = [];
+        $allRows = [];
+        $sheetCount = $spreadsheet->getSheetCount();
+
+        foreach ($spreadsheet->getWorksheetIterator() as $sheet) {
+            $dataset = $this->matrixToDataset($sheet->toArray(null, true, true, true));
+            if ($dataset['headers'] === [] && $dataset['rows'] === []) {
+                continue;
+            }
+
+            foreach ($dataset['headers'] as $header) {
+                if (!in_array($header, $allHeaders, true)) {
+                    $allHeaders[] = $header;
+                }
+            }
+
+            foreach ($dataset['rows'] as $row) {
+                if ($sheetCount > 1) {
+                    $row = ['__sheet' => $sheet->getTitle()] + $row;
+                }
+                $allRows[] = $row;
+            }
+        }
+
+        if ($sheetCount > 1 && $allRows !== []) {
+            array_unshift($allHeaders, '__sheet');
+        }
+
+        return $this->buildResult($this->uniqueHeaders($allHeaders), $allRows);
     }
 
     private function parseCsv(string $path): array
@@ -48,8 +74,31 @@ class FileParserService
 
     private function parseJson(string $path): array
     {
-        $payload = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+        $contents = file_get_contents($path);
+        if ($contents === false || trim($contents) === '') {
+            throw new \RuntimeException('El JSON esta vacio o no se pudo leer.');
+        }
+
+        try {
+            $payload = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \RuntimeException('El JSON no tiene un formato valido: ' . $e->getMessage(), previous: $e);
+        }
+
+        if (!is_array($payload)) {
+            throw new \RuntimeException('El JSON debe contener un objeto o una lista de objetos.');
+        }
+
         $rows = array_is_list($payload) ? $payload : ($payload['rows'] ?? $payload['data'] ?? $payload['items'] ?? []);
+        if ($rows === [] && is_array($payload) && !array_is_list($payload)) {
+            $rows = [$payload];
+        }
+
+        $rows = array_values(array_filter($rows, 'is_array'));
+        if ($rows === []) {
+            throw new \RuntimeException('No se encontraron filas en el JSON. Usa una lista de objetos o una clave "rows", "data" o "items".');
+        }
+
         $rows = array_map(fn (array $row) => $this->flattenRow($row), $rows);
         $headers = $this->uniqueHeaders(array_merge(...array_map('array_keys', $rows ?: [[]])));
 

@@ -22,6 +22,20 @@ class ColumnDetectionService
         'patient_id_anonymous',
     ];
 
+    public const FIELD_LABELS = [
+        'visit_date' => 'Fecha de visita o cita',
+        'professional_name' => 'Profesional',
+        'specialty' => 'Especialidad o servicio',
+        'center' => 'Centro o sede',
+        'status' => 'Estado de la cita',
+        'amount' => 'Importe facturado',
+        'insurance' => 'Aseguradora o mutua',
+        'duration_minutes' => 'Duracion en minutos',
+        'patient_age' => 'Edad del paciente',
+        'patient_gender' => 'Genero del paciente',
+        'patient_id_anonymous' => 'ID anonimo del paciente',
+    ];
+
     private const SENSITIVE_PATTERNS = [
         'paciente', 'patient name', 'nombre paciente', 'apellido', 'surname',
         'dni', 'nif', 'nie', 'telefono', 'phone', 'email', 'e-mail',
@@ -40,7 +54,7 @@ class ColumnDetectionService
         'duration_minutes' => ['duracion', 'minutos', 'duration', 'minutes'],
         'patient_age' => ['edad', 'age'],
         'patient_gender' => ['genero', 'sexo', 'gender', 'sex'],
-        'patient_id_anonymous' => ['id paciente', 'patient id', 'codigo paciente', 'identificador paciente'],
+        'patient_id_anonymous' => ['id paciente', 'paciente id', 'patient id', 'codigo paciente', 'identificador paciente', 'id interno'],
     ];
 
     public function __construct(
@@ -55,7 +69,7 @@ class ColumnDetectionService
 
         foreach ($headers as $header) {
             $isSensitive = $this->isSensitive($header);
-            $localField = $isSensitive ? null : $this->suggestLocalField($header);
+            $localField = $this->suggestLocalField($header);
             $localColumns[$header] = [
                 'ignored' => $isSensitive,
                 'mapped_field' => $localField,
@@ -113,6 +127,11 @@ class ColumnDetectionService
         }
 
         return false;
+    }
+
+    public function suggestField(string $header): ?string
+    {
+        return $this->suggestLocalField($header);
     }
 
     private function suggestLocalField(string $header): ?string

@@ -40,6 +40,9 @@ class UploadedFile
     private int $rowCount = 0;
 
     #[ORM\Column]
+    private int $fileSizeBytes = 0;
+
+    #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'text', nullable: true)]
@@ -73,10 +76,11 @@ class UploadedFile
     public function setStatus(string $status): self { $this->status = $status; return $this; }
     public function getRowCount(): int { return $this->rowCount; }
     public function setRowCount(int $rowCount): self { $this->rowCount = $rowCount; return $this; }
+    public function getFileSizeBytes(): int { return $this->fileSizeBytes; }
+    public function setFileSizeBytes(int $fileSizeBytes): self { $this->fileSizeBytes = $fileSizeBytes; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function getErrorMessage(): ?string { return $this->errorMessage; }
     public function setErrorMessage(?string $errorMessage): self { $this->errorMessage = $errorMessage; return $this; }
     public function getColumns(): Collection { return $this->columns; }
     public function getRows(): Collection { return $this->rows; }
 }
-

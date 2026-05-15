@@ -1,16 +1,16 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Modulos - ClinicInsight{% endblock %}
+{% block title %}{{ 'modules.title'|trans }} - ClinicInsight{% endblock %}
 
 {% block body %}
 <div class="ci-actionbar py-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <div class="ci-eyebrow mb-1">SaaS modular</div>
-            <h1 class="h3 mb-1">Modulos y planes</h1>
-            <div class="text-muted">Activa capacidades por version y plan. Plan actual: <strong>{{ currentPlan|capitalize }}</strong></div>
+            <div class="ci-eyebrow mb-1">{{ 'modules.eyebrow'|trans }}</div>
+            <h1 class="h3 mb-1">{{ 'modules.title'|trans }}</h1>
+            <div class="text-muted">{{ 'modules.subtitle'|trans({'{plan}': currentPlan|capitalize}) }}</div>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ path('dashboard') }}">Dashboard</a>
+        <a class="btn btn-outline-secondary" href="{{ path('dashboard') }}">{{ 'dashboard.dashboard'|trans }}</a>
     </div>
 </div>
 
@@ -31,24 +31,24 @@
                                     <div class="small text-muted">v{{ module.version }} · {{ module.price_label }}</div>
                                 </div>
                                 {% if module.status == 'active' and module.enabled %}
-                                    <span class="badge text-bg-success">Activo</span>
+                                    <span class="badge text-bg-success">{{ 'modules.active'|trans }}</span>
                                 {% elseif module.status == 'beta' %}
-                                    <span class="badge text-bg-warning">Beta</span>
+                                    <span class="badge text-bg-warning">{{ 'modules.beta'|trans }}</span>
                                 {% elseif module.status == 'planned' %}
-                                    <span class="badge text-bg-secondary">Proximamente</span>
+                                    <span class="badge text-bg-secondary">{{ 'modules.planned'|trans }}</span>
                                 {% else %}
-                                    <span class="badge text-bg-light border">Bloqueado</span>
+                                    <span class="badge text-bg-light border">{{ 'modules.locked'|trans }}</span>
                                 {% endif %}
                             </div>
                             <p class="text-muted small">{{ module.description }}</p>
                             <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="small text-muted">Min: {{ module.minimum_plan|capitalize }}</span>
+                                <span class="small text-muted">{{ 'modules.current_min'|trans }}: {{ module.minimum_plan|capitalize }}</span>
                                 {% if module.enabled %}
-                                    <button class="btn btn-sm btn-primary" type="button" data-module-action="open">Listo</button>
+                                    <button class="btn btn-sm btn-primary" type="button" data-module-action="open">{{ 'modules.ready'|trans }}</button>
                                 {% elseif module.status == 'planned' %}
-                                    <button class="btn btn-sm btn-outline-secondary" disabled>En roadmap</button>
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>{{ 'modules.roadmap'|trans }}</button>
                                 {% else %}
-                                    <button class="btn btn-sm btn-outline-primary" type="button" data-module-action="upgrade">Mejorar plan</button>
+                                    <button class="btn btn-sm btn-outline-primary" type="button" data-module-action="upgrade">{{ 'modules.upgrade'|trans }}</button>
                                 {% endif %}
                             </div>
                         </div>
@@ -73,7 +73,7 @@ document.querySelectorAll('.module-card').forEach((card, index) => {
 document.querySelectorAll('[data-module-action]').forEach(button => {
     button.addEventListener('click', () => {
         const previous = button.textContent;
-        button.textContent = button.dataset.moduleAction === 'upgrade' ? 'Pago pendiente' : 'Modulo activo';
+        button.textContent = button.dataset.moduleAction === 'upgrade' ? '{{ 'modules.payment_pending'|trans }}' : '{{ 'modules.module_active'|trans }}';
         setTimeout(() => button.textContent = previous, 1400);
     });
 });
